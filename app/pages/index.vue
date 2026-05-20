@@ -216,15 +216,6 @@ async function endGame() {
           <span>Stashed: <strong>{{ stashedPoints }} pts</strong> — roll all 6 again, need ≥ 350 this roll</span>
         </div>
 
-        <div class="flex gap-2">
-          <button class="btn btn-outline btn-sm flex-1" @click="stashThreePairs">
-            Three Pairs (+750)
-          </button>
-          <button class="btn btn-outline btn-sm flex-1" @click="stashStraight">
-            Straight 1–6 (+1500)
-          </button>
-        </div>
-
         <div class="flex items-center gap-3">
           <input
             v-model.number="turnPoints"
