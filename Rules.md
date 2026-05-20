@@ -38,6 +38,7 @@ Certain dice combinations earn points:
 
 4. If you roll dice with no scoring combinations or less than 350 points, you **"farkle"** or **"bust"**—you lose all points from that turn and pass the dice.
 5. If you had three farkles in a row, you lose 1,000 points.
+6. If you set aside all the dice, your must start over with all the dice and again get to 350 points. All the points are added up get banked together.
 
 ## Winning
 The first player to accumulate 10,000 points while using all the dice wins. All players who hadn't had their turn get a chance to match the point in the last round.

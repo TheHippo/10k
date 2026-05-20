@@ -89,6 +89,13 @@ async function startGame() {
 // --- Active game ---
 
 const turnPoints = ref(0)
+const stashedPoints = ref(0)
+
+function stashPoints() {
+  if (turnPoints.value < 350) return
+  stashedPoints.value += turnPoints.value
+  turnPoints.value = 0
+}
 
 async function bank() {
   if (!activeGame.value || turnPoints.value < 350) return
@@ -96,22 +103,24 @@ async function bank() {
   const gp = activeGamePlayers.value.find(p => p.id === game.currentGamePlayerId)
   if (!gp) return
 
+  const total = stashedPoints.value + turnPoints.value
   const turnCount = await db.turns.where('gameId').equals(game.id).count()
 
   await db.transaction('rw', db.turns, db.gamePlayers, db.games, async () => {
     await db.turns.add({
       gameId: game.id, gamePlayerId: gp.id,
-      turnNumber: turnCount + 1, pointsBanked: turnPoints.value,
+      turnNumber: turnCount + 1, pointsBanked: total,
       farkled: false, createdAt: new Date(),
     } as Turn)
     await db.gamePlayers.update(gp.id, {
-      totalScore: gp.totalScore + turnPoints.value,
+      totalScore: gp.totalScore + total,
       consecutiveFarkles: 0,
     })
     await advanceTurn(game)
   })
 
   turnPoints.value = 0
+  stashedPoints.value = 0
 }
 
 async function farkle() {
@@ -136,6 +145,8 @@ async function farkle() {
     })
     await advanceTurn(game)
   })
+
+  stashedPoints.value = 0
 }
 
 async function advanceTurn(game: Game) {
@@ -193,15 +204,22 @@ async function endGame() {
 
         <div class="divider">Current Turn</div>
 
+        <div v-if="stashedPoints > 0" class="alert alert-info py-2">
+          <span>Stashed: <strong>{{ stashedPoints }} pts</strong> — roll all 6 again, need ≥ 350 this roll</span>
+        </div>
+
         <div class="flex items-center gap-3">
           <input
             v-model.number="turnPoints"
             type="number"
             min="0"
             step="50"
-            placeholder="Points scored this turn"
+            placeholder="Points scored this roll"
             class="input input-bordered flex-1"
           />
+          <button class="btn btn-info" :disabled="turnPoints < 350" @click="stashPoints">
+            Stash & Roll Again
+          </button>
           <button class="btn btn-success" :disabled="turnPoints < 350" @click="bank">
             Bank
           </button>
@@ -210,7 +228,7 @@ async function endGame() {
           </button>
         </div>
         <p v-if="turnPoints > 0 && turnPoints < 350" class="text-sm text-warning">
-          Need at least 350 points to bank.
+          Need at least 350 points this roll to bank or stash.<span v-if="stashedPoints > 0"> Rolling under 350 loses your {{ stashedPoints }} stashed points too.</span>
         </p>
 
         <div class="card-actions justify-end mt-2">
