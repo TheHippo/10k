@@ -236,22 +236,22 @@ async function endGame() {
           </button>
         </div>
 
-        <div class="flex items-center gap-3">
-          <input
-            v-model.number="turnPoints"
-            type="number"
-            min="0"
-            step="50"
-            placeholder="Points scored this roll"
-            class="input input-bordered flex-1"
-          />
-          <button class="btn btn-info" :disabled="turnPoints < 350" @click="stashPoints">
+        <input
+          v-model.number="turnPoints"
+          type="number"
+          min="0"
+          step="50"
+          placeholder="Points scored this roll"
+          class="input input-bordered w-full"
+        />
+        <div class="flex gap-3">
+          <button class="btn btn-info flex-1" :disabled="turnPoints < 350" @click="stashPoints">
             Stash & Roll Again
           </button>
-          <button class="btn btn-success" :disabled="turnPoints < 350" @click="bank">
+          <button class="btn btn-success flex-1" :disabled="turnPoints < 350" @click="bank">
             Bank
           </button>
-          <button class="btn btn-error" @click="farkle">
+          <button class="btn btn-error flex-1" @click="farkle">
             Farkle
           </button>
         </div>
