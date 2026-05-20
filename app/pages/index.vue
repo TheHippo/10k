@@ -97,6 +97,14 @@ function stashPoints() {
   turnPoints.value = 0
 }
 
+function stashThreePairs() {
+  stashedPoints.value += 750
+}
+
+function stashStraight() {
+  stashedPoints.value += 1500
+}
+
 async function bank() {
   if (!activeGame.value || turnPoints.value < 350) return
   const game = activeGame.value
@@ -206,6 +214,15 @@ async function endGame() {
 
         <div v-if="stashedPoints > 0" class="alert alert-info py-2">
           <span>Stashed: <strong>{{ stashedPoints }} pts</strong> — roll all 6 again, need ≥ 350 this roll</span>
+        </div>
+
+        <div class="flex gap-2">
+          <button class="btn btn-outline btn-sm flex-1" @click="stashThreePairs">
+            Three Pairs (+750)
+          </button>
+          <button class="btn btn-outline btn-sm flex-1" @click="stashStraight">
+            Straight 1–6 (+1500)
+          </button>
         </div>
 
         <div class="flex items-center gap-3">
