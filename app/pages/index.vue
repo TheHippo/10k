@@ -44,26 +44,37 @@ const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
 
 // --- Lobby ---
 
-const playerNames = ref(['', ''])
+const allPlayers = useLiveQuery(() => db.players.orderBy('name').toArray(), [])
+const selectedPlayerIds = ref<(number | null)[]>([null, null])
+
+const newPlayerModal = ref<HTMLDialogElement | null>(null)
+const newPlayerName = ref('')
 
 function addPlayer() {
-  if (playerNames.value.length < 6) playerNames.value.push('')
+  if (selectedPlayerIds.value.length < 6) selectedPlayerIds.value.push(null)
 }
 
 function removePlayer(i: number) {
-  playerNames.value.splice(i, 1)
+  selectedPlayerIds.value.splice(i, 1)
+}
+
+function openNewPlayerModal() {
+  newPlayerName.value = ''
+  newPlayerModal.value?.showModal()
+}
+
+async function createPlayer() {
+  const name = newPlayerName.value.trim()
+  if (!name) return
+  await db.players.add({ name } as Player)
+  newPlayerModal.value?.close()
 }
 
 async function startGame() {
-  const names = playerNames.value.map(n => n.trim()).filter(Boolean)
-  if (names.length < 2) return
+  const ids = selectedPlayerIds.value.filter((id): id is number => id !== null)
+  if (ids.length < 2) return
 
-  await db.transaction('rw', db.games, db.players, db.gamePlayers, async () => {
-    const playerIds: number[] = await Promise.all(names.map(async (name) => {
-      const existing = await db.players.where('name').equals(name).first()
-      return existing ? existing.id : db.players.add({ name } as Player)
-    }))
-
+  await db.transaction('rw', db.games, db.gamePlayers, async () => {
     const gameId = await db.games.add({
       status: 'active',
       startedAt: new Date(),
@@ -71,19 +82,19 @@ async function startGame() {
     } as Game)
 
     const firstId = await db.gamePlayers.add({
-      gameId, playerId: playerIds[0], turnOrder: 0, totalScore: 0, consecutiveFarkles: 0,
+      gameId, playerId: ids[0], turnOrder: 0, totalScore: 0, consecutiveFarkles: 0,
     } as GamePlayer)
 
-    for (let i = 1; i < playerIds.length; i++) {
+    for (let i = 1; i < ids.length; i++) {
       await db.gamePlayers.add({
-        gameId, playerId: playerIds[i], turnOrder: i, totalScore: 0, consecutiveFarkles: 0,
+        gameId, playerId: ids[i], turnOrder: i, totalScore: 0, consecutiveFarkles: 0,
       } as GamePlayer)
     }
 
     await db.games.update(gameId, { currentGamePlayerId: firstId })
   })
 
-  playerNames.value = ['', '']
+  selectedPlayerIds.value = [null, null]
 }
 
 // --- Active game ---
@@ -216,6 +227,15 @@ async function endGame() {
           <span>Stashed: <strong>{{ stashedPoints }} pts</strong> — roll all 6 again, need ≥ 350 this roll</span>
         </div>
 
+        <div class="flex gap-2">
+          <button class="btn btn-outline btn-sm flex-1" @click="stashThreePairs">
+            Three Pairs (+750)
+          </button>
+          <button class="btn btn-outline btn-sm flex-1" @click="stashStraight">
+            Straight 1–6 (+1500)
+          </button>
+        </div>
+
         <div class="flex items-center gap-3">
           <input
             v-model.number="turnPoints"
@@ -251,34 +271,60 @@ async function endGame() {
         <h1 class="card-title text-2xl">New Game</h1>
 
         <div class="space-y-2">
-          <div v-for="(_, i) in playerNames" :key="i" class="flex gap-2">
-            <input
-              v-model="playerNames[i]"
-              :placeholder="`Player ${i + 1}`"
-              class="input input-bordered flex-1"
-            />
+          <div v-for="(id, i) in selectedPlayerIds" :key="i" class="flex gap-2">
+            <select v-model="selectedPlayerIds[i]" class="select select-bordered flex-1">
+              <option :value="null" disabled>Select player…</option>
+              <option v-for="p in allPlayers" :key="p.id" :value="p.id"
+                      :disabled="selectedPlayerIds.some((id, j) => id === p.id && j !== i)">
+                {{ p.name }}
+              </option>
+            </select>
             <button
               class="btn btn-ghost btn-square"
-              :disabled="playerNames.length <= 2"
+              :disabled="selectedPlayerIds.length <= 2"
               @click="removePlayer(i)"
             >✕</button>
           </div>
         </div>
 
         <div class="card-actions justify-between mt-4">
-          <button
-            class="btn btn-ghost btn-sm"
-            :disabled="playerNames.length >= 6"
-            @click="addPlayer"
-          >+ Add Player</button>
+          <div class="flex gap-2">
+            <button
+              class="btn btn-ghost btn-sm"
+              :disabled="selectedPlayerIds.length >= 6"
+              @click="addPlayer"
+            >+ Add Player</button>
+            <button class="btn btn-ghost btn-sm" @click="openNewPlayerModal">+ New Player</button>
+          </div>
           <button
             class="btn btn-primary"
-            :disabled="playerNames.filter(n => n.trim()).length < 2"
+            :disabled="selectedPlayerIds.filter(id => id !== null).length < 2"
             @click="startGame"
           >Start Game</button>
         </div>
       </div>
     </div>
+
+    <!-- New Player Modal -->
+    <dialog ref="newPlayerModal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">New Player</h3>
+        <input
+          v-model="newPlayerName"
+          type="text"
+          placeholder="Player name"
+          class="input input-bordered w-full"
+          @keyup.enter="createPlayer"
+        />
+        <div class="modal-action">
+          <button class="btn btn-ghost" @click="newPlayerModal?.close()">Cancel</button>
+          <button class="btn btn-primary" :disabled="!newPlayerName.trim()" @click="createPlayer">
+            Create
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
 
     <!-- History -->
     <div v-if="finishedGames.length > 0">
