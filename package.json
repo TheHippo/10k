@@ -12,6 +12,7 @@
   "dependencies": {
     "@tailwindcss/vite": "latest",
     "daisyui": "latest",
+    "dexie": "^4.4.2",
     "nuxt": "^4.4.6",
     "tailwindcss": "latest",
     "vue": "^3.5.34",

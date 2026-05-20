@@ -11,8 +11,8 @@ __metadata:
   dependencies:
     "@tailwindcss/vite": latest
     daisyui: latest
+    dexie: ^4.4.2
     nuxt: ^4.4.6
-    pocketbase: ^0.26.9
     tailwindcss: latest
     vue: ^3.5.34
     vue-router: ^5.0.7
@@ -3642,6 +3642,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dexie@npm:^4.4.2":
+  version: 4.4.2
+  resolution: "dexie@npm:4.4.2"
+  checksum: c3159e26386b9f1cf306c3510acbfd59cb9102de001c5e33753918bc03a2affcbdf573d58be94a322244da4e4432e7fb418fa93f1750302c6609606d5e99a6ac
+  languageName: node
+  linkType: hard
+
 "diff@npm:^8.0.3":
   version: 8.0.4
   resolution: "diff@npm:8.0.4"
@@ -5939,13 +5946,6 @@ __metadata:
     exsolve: ^1.0.8
     pathe: ^2.0.3
   checksum: 784ec3087c8395cc36ba22a3928908e1a424174d3b3618f8f4b5bdff1297f83445070400df260d237685ce1a01a5de6a3534ba923fe6178c17838d589161a8ab
-  languageName: node
-  linkType: hard
-
-"pocketbase@npm:^0.26.9":
-  version: 0.26.9
-  resolution: "pocketbase@npm:0.26.9"
-  checksum: f097a03f7839ff7004bc988757aebc7b99d6c65bf185bc2423a2b864d55b63f80a3ffd1c7ac4a91c4320c2544629b5e2f429e56b0086081a7b6d0b94938d4da7
   languageName: node
   linkType: hard
 
