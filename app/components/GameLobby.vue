@@ -89,7 +89,7 @@ async function startGame() {
       </div>
       <button
         class="btn btn-primary"
-        :disabled="selectedPlayerIds.filter(id => id !== null).length < 2"
+        :disabled="selectedPlayerIds.some(id => id === null)"
         @click="startGame"
       >Start Game</button>
     </div>
