@@ -7,12 +7,6 @@ interface GamePlayerWithName extends GamePlayer {
   playerName: string
 }
 
-interface FinishedGameSummary {
-  game: Game
-  players: GamePlayerWithName[]
-  winnerName: string
-}
-
 const activeGame = useLiveQuery<Game | undefined>(
   () => db.games.where('status').equals('active').first(),
   undefined,
@@ -25,20 +19,6 @@ const activeGamePlayers = useLiveQuery<GamePlayerWithName[]>(async () => {
   return Promise.all(gps.map(async (gp) => {
     const player = await db.players.get(gp.playerId)
     return { ...gp, playerName: player?.name ?? 'Unknown' }
-  }))
-}, [])
-
-const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
-  const games = await db.games.where('status').equals('finished').toArray()
-  games.sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
-  return Promise.all(games.map(async (game) => {
-    const gps = await db.gamePlayers.where('gameId').equals(game.id).sortBy('turnOrder')
-    const players = await Promise.all(gps.map(async (gp) => {
-      const player = await db.players.get(gp.playerId)
-      return { ...gp, playerName: player?.name ?? 'Unknown' }
-    }))
-    const winner = players.find(p => p.id === game.winnerGamePlayerId)
-    return { game, players, winnerName: winner?.playerName ?? 'Unknown' }
   }))
 }, [])
 
@@ -132,11 +112,9 @@ async function endGame() {
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto py-8 space-y-8">
-
-    <!-- Active game -->
-    <AppCard v-if="activeGame">
-        <h1 class="card-title text-2xl">Game in Progress</h1>
+  <!-- Active game -->
+  <AppCard v-if="activeGame">
+        <h1>Game in Progress</h1>
 
         <table class="table">
           <thead>
@@ -208,26 +186,6 @@ async function endGame() {
         </div>
     </AppCard>
 
-    <!-- Lobby -->
-    <GameLobby v-else />
-
-    <!-- History -->
-    <div v-if="finishedGames.length > 0">
-      <h2 class="text-xl font-bold mb-3">Past Games</h2>
-      <div class="space-y-4">
-        <AppCard v-for="summary in finishedGames" :key="summary.game.id" shadow="shadow-sm" compact>
-          <div class="flex justify-between items-center">
-            <span class="font-semibold">{{ summary.game.startedAt.toLocaleDateString() }}</span>
-            <span class="badge badge-accent">Winner: {{ summary.winnerName }}</span>
-          </div>
-          <div class="flex gap-4 flex-wrap text-sm mt-1">
-            <span v-for="p in summary.players" :key="p.id" class="font-mono">
-              {{ p.playerName }}: {{ p.totalScore }}
-            </span>
-          </div>
-        </AppCard>
-      </div>
-    </div>
-
-  </div>
+  <!-- Lobby -->
+  <GameLobby v-else />
 </template>

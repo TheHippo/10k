@@ -59,7 +59,7 @@ async function startGame() {
 
 <template>
   <AppCard>
-    <h1 class="card-title text-2xl">New Game</h1>
+    <h1>New Game</h1>
 
     <div class="space-y-2">
       <div v-for="(id, i) in selectedPlayerIds" :key="i" class="flex gap-2">
