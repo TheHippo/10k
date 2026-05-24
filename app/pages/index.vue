@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { db } from '~/db'
-import type { Game, Player, GamePlayer, Turn } from '~/db'
+import type { Game, GamePlayer, Turn } from '~/db'
 
 interface GamePlayerWithName extends GamePlayer {
   playerName: string
@@ -41,61 +41,6 @@ const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
     return { game, players, winnerName: winner?.playerName ?? 'Unknown' }
   }))
 }, [])
-
-// --- Lobby ---
-
-const allPlayers = useLiveQuery(() => db.players.orderBy('name').toArray(), [])
-const selectedPlayerIds = ref<(number | null)[]>([null, null])
-
-const newPlayerModal = ref<HTMLDialogElement | null>(null)
-const newPlayerName = ref('')
-
-function addPlayer() {
-  if (selectedPlayerIds.value.length < 6) selectedPlayerIds.value.push(null)
-}
-
-function removePlayer(i: number) {
-  selectedPlayerIds.value.splice(i, 1)
-}
-
-function openNewPlayerModal() {
-  newPlayerName.value = ''
-  newPlayerModal.value?.showModal()
-}
-
-async function createPlayer() {
-  const name = newPlayerName.value.trim()
-  if (!name) return
-  await db.players.add({ name } as Player)
-  newPlayerModal.value?.close()
-}
-
-async function startGame() {
-  const ids = selectedPlayerIds.value.filter((id): id is number => id !== null)
-  if (ids.length < 2) return
-
-  await db.transaction('rw', db.games, db.gamePlayers, async () => {
-    const gameId = await db.games.add({
-      status: 'active',
-      startedAt: new Date(),
-      currentGamePlayerId: 0,
-    } as Game)
-
-    const firstId = await db.gamePlayers.add({
-      gameId, playerId: ids[0], turnOrder: 0, totalScore: 0, consecutiveFarkles: 0,
-    } as GamePlayer)
-
-    for (let i = 1; i < ids.length; i++) {
-      await db.gamePlayers.add({
-        gameId, playerId: ids[i], turnOrder: i, totalScore: 0, consecutiveFarkles: 0,
-      } as GamePlayer)
-    }
-
-    await db.games.update(gameId, { currentGamePlayerId: firstId })
-  })
-
-  selectedPlayerIds.value = [null, null]
-}
 
 // --- Active game ---
 
@@ -190,8 +135,7 @@ async function endGame() {
   <div class="max-w-2xl mx-auto py-8 space-y-8">
 
     <!-- Active game -->
-    <div v-if="activeGame" class="card bg-base-200 shadow">
-      <div class="card-body">
+    <AppCard v-if="activeGame">
         <h1 class="card-title text-2xl">Game in Progress</h1>
 
         <table class="table">
@@ -262,87 +206,26 @@ async function endGame() {
         <div class="card-actions justify-end mt-2">
           <button class="btn btn-ghost btn-sm" @click="endGame">End Game</button>
         </div>
-      </div>
-    </div>
+    </AppCard>
 
     <!-- Lobby -->
-    <div v-else class="card bg-base-200 shadow">
-      <div class="card-body">
-        <h1 class="card-title text-2xl">New Game</h1>
-
-        <div class="space-y-2">
-          <div v-for="(id, i) in selectedPlayerIds" :key="i" class="flex gap-2">
-            <select v-model="selectedPlayerIds[i]" class="select select-bordered flex-1">
-              <option :value="null" disabled>Select player…</option>
-              <option v-for="p in allPlayers" :key="p.id" :value="p.id"
-                      :disabled="selectedPlayerIds.some((id, j) => id === p.id && j !== i)">
-                {{ p.name }}
-              </option>
-            </select>
-            <button
-              class="btn btn-ghost btn-square"
-              :disabled="selectedPlayerIds.length <= 2"
-              @click="removePlayer(i)"
-            >✕</button>
-          </div>
-        </div>
-
-        <div class="card-actions justify-between mt-4">
-          <div class="flex gap-2">
-            <button
-              class="btn btn-ghost btn-sm"
-              :disabled="selectedPlayerIds.length >= 6"
-              @click="addPlayer"
-            >+ Add Player</button>
-            <button class="btn btn-ghost btn-sm" @click="openNewPlayerModal">+ New Player</button>
-          </div>
-          <button
-            class="btn btn-primary"
-            :disabled="selectedPlayerIds.filter(id => id !== null).length < 2"
-            @click="startGame"
-          >Start Game</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- New Player Modal -->
-    <dialog ref="newPlayerModal" class="modal">
-      <div class="modal-box">
-        <h3 class="font-bold text-lg mb-4">New Player</h3>
-        <input
-          v-model="newPlayerName"
-          type="text"
-          placeholder="Player name"
-          class="input input-bordered w-full"
-          @keyup.enter="createPlayer"
-        />
-        <div class="modal-action">
-          <button class="btn btn-ghost" @click="newPlayerModal?.close()">Cancel</button>
-          <button class="btn btn-primary" :disabled="!newPlayerName.trim()" @click="createPlayer">
-            Create
-          </button>
-        </div>
-      </div>
-      <form method="dialog" class="modal-backdrop"><button>close</button></form>
-    </dialog>
+    <GameLobby v-else />
 
     <!-- History -->
     <div v-if="finishedGames.length > 0">
       <h2 class="text-xl font-bold mb-3">Past Games</h2>
       <div class="space-y-4">
-        <div v-for="summary in finishedGames" :key="summary.game.id" class="card bg-base-200 shadow-sm">
-          <div class="card-body py-4">
-            <div class="flex justify-between items-center">
-              <span class="font-semibold">{{ summary.game.startedAt.toLocaleDateString() }}</span>
-              <span class="badge badge-accent">Winner: {{ summary.winnerName }}</span>
-            </div>
-            <div class="flex gap-4 flex-wrap text-sm mt-1">
-              <span v-for="p in summary.players" :key="p.id" class="font-mono">
-                {{ p.playerName }}: {{ p.totalScore }}
-              </span>
-            </div>
+        <AppCard v-for="summary in finishedGames" :key="summary.game.id" shadow="shadow-sm" compact>
+          <div class="flex justify-between items-center">
+            <span class="font-semibold">{{ summary.game.startedAt.toLocaleDateString() }}</span>
+            <span class="badge badge-accent">Winner: {{ summary.winnerName }}</span>
           </div>
-        </div>
+          <div class="flex gap-4 flex-wrap text-sm mt-1">
+            <span v-for="p in summary.players" :key="p.id" class="font-mono">
+              {{ p.playerName }}: {{ p.totalScore }}
+            </span>
+          </div>
+        </AppCard>
       </div>
     </div>
 
