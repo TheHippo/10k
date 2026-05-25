@@ -10,6 +10,7 @@ interface FinishedGameSummary {
   game: Game
   players: GamePlayerWithName[]
   winnerName: string
+  winnerScore: number
 }
 
 const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
@@ -22,7 +23,7 @@ const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
       return { ...gp, playerName: player?.name ?? 'Unknown' }
     }))
     const winner = players.find(p => p.id === game.winnerGamePlayerId)
-    return { game, players, winnerName: winner?.playerName ?? 'Unknown' }
+    return { game, players, winnerName: winner?.playerName ?? 'Unknown', winnerScore: winner?.totalScore ?? 0 }
   }))
 }, [])
 </script>
@@ -34,7 +35,7 @@ const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
     <AppCard v-for="summary in finishedGames" :key="summary.game.id" shadow="shadow-sm" compact>
       <div class="flex justify-between items-center">
         <span class="font-semibold">{{ summary.game.startedAt.toLocaleDateString() }}</span>
-        <span class="badge badge-accent">Winner: {{ summary.winnerName }}</span>
+        <span v-if="summary.winnerScore >= 10000" class="badge badge-accent">Winner: {{ summary.winnerName }}</span>
       </div>
       <div class="flex gap-4 flex-wrap text-sm mt-1">
         <span v-for="p in summary.players" :key="p.id" class="font-mono">
