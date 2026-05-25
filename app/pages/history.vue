@@ -22,25 +22,38 @@ const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
       const player = await db.players.get(gp.playerId)
       return { ...gp, playerName: player?.name ?? 'Unknown' }
     }))
+    const playersSorted = [...players].sort((a, b) => b.totalScore - a.totalScore)
     const winner = players.find(p => p.id === game.winnerGamePlayerId)
-    return { game, players, winnerName: winner?.playerName ?? 'Unknown', winnerScore: winner?.totalScore ?? 0 }
+    return { game, players: playersSorted, winnerName: winner?.playerName ?? 'Unknown', winnerScore: winner?.totalScore ?? 0 }
   }))
 }, [])
 </script>
 
 <template>
   <h1>Past Games</h1>
-  <p v-if="finishedGames.length === 0" class="text-base-content/60">No games finished yet.</p>
+  <p v-if="finishedGames.length === 0" class="text-base-content/60 text-center mt-8">No games finished yet.</p>
   <div class="space-y-4">
     <AppCard v-for="summary in finishedGames" :key="summary.game.id" shadow="shadow-sm" compact>
       <div class="flex justify-between items-center">
-        <span class="font-semibold">{{ summary.game.startedAt.toLocaleDateString() }}</span>
-        <span v-if="summary.winnerScore >= 10000" class="badge badge-accent">Winner: {{ summary.winnerName }}</span>
-      </div>
-      <div class="flex gap-4 flex-wrap text-sm mt-1">
-        <span v-for="p in summary.players" :key="p.id" class="font-mono">
-          {{ p.playerName }}: {{ p.totalScore }}
+        <span class="text-sm text-base-content/60 font-medium">
+          {{ summary.game.startedAt.toLocaleDateString() }}
         </span>
+        <span v-if="summary.winnerScore >= 10000" class="badge badge-accent">
+          🏆 {{ summary.winnerName }}
+        </span>
+        <span v-else class="badge badge-neutral">Aborted</span>
+      </div>
+      <div class="divider my-1" />
+      <div class="space-y-1">
+        <div
+          v-for="p in summary.players" :key="p.id"
+          class="flex justify-between text-sm"
+          :class="p.id === summary.game.winnerGamePlayerId && summary.winnerScore >= 10000
+            ? 'font-bold text-accent' : 'text-base-content/80'"
+        >
+          <span>{{ p.playerName }}</span>
+          <span class="font-mono">{{ p.totalScore.toLocaleString() }}</span>
+        </div>
       </div>
     </AppCard>
   </div>
