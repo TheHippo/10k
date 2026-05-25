@@ -12,6 +12,7 @@ export interface Game {
 export interface Player {
   id: number
   name: string
+  deleted?: boolean
 }
 
 export interface GamePlayer {
@@ -41,7 +42,7 @@ class AppDatabase extends Dexie {
 
   constructor() {
     super('10k-db')
-    this.version(1).stores({
+    this.version(2).stores({
       games:       '++id, status',
       players:     '++id, name',
       gamePlayers: '++id, gameId, playerId, [gameId+turnOrder]',

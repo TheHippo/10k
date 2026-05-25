@@ -48,6 +48,11 @@ function closeDrawer() {
             History
           </NuxtLink>
         </li>
+        <li>
+          <NuxtLink to="/players" :class="{ 'menu-active': route.path === '/players' }" @click="closeDrawer">
+            Players
+          </NuxtLink>
+        </li>
       </ul>
     </div>
   </div>

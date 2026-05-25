@@ -1,0 +1,44 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { db } from '~/db'
+import type { Player } from '~/db'
+
+const dialogRef = ref<HTMLDialogElement | null>(null)
+const newPlayerName = ref('')
+
+function open() {
+  newPlayerName.value = ''
+  dialogRef.value?.showModal()
+}
+
+async function createPlayer() {
+  const name = newPlayerName.value.trim()
+  if (!name) return
+  await db.players.add({ name } as Player)
+  dialogRef.value?.close()
+}
+
+defineExpose({ open })
+</script>
+
+<template>
+  <dialog ref="dialogRef" class="modal">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg mb-4">New Player</h3>
+      <input
+        v-model="newPlayerName"
+        type="text"
+        placeholder="Player name"
+        class="input input-bordered w-full"
+        @keyup.enter="createPlayer"
+      />
+      <div class="modal-action">
+        <button class="btn btn-ghost" @click="dialogRef?.close()">Cancel</button>
+        <button class="btn btn-primary" :disabled="!newPlayerName.trim()" @click="createPlayer">
+          Create
+        </button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+  </dialog>
+</template>

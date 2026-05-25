@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { db } from '~/db'
-import type { Player, GamePlayer, Game } from '~/db'
+import type { GamePlayer, Game } from '~/db'
 
-const allPlayers = useLiveQuery(() => db.players.orderBy('name').toArray(), [])
+const allPlayers = useLiveQuery(() => db.players.orderBy('name').filter(p => !p.deleted).toArray(), [])
 const selectedPlayerIds = ref<(number | null)[]>([null, null])
 
-const newPlayerModal = ref<HTMLDialogElement | null>(null)
-const newPlayerName = ref('')
+const newPlayerModal = ref<{ open: () => void } | null>(null)
 
 function addPlayer() {
   if (selectedPlayerIds.value.length < 6) selectedPlayerIds.value.push(null)
@@ -15,18 +14,6 @@ function addPlayer() {
 
 function removePlayer(i: number) {
   selectedPlayerIds.value.splice(i, 1)
-}
-
-function openNewPlayerModal() {
-  newPlayerName.value = ''
-  newPlayerModal.value?.showModal()
-}
-
-async function createPlayer() {
-  const name = newPlayerName.value.trim()
-  if (!name) return
-  await db.players.add({ name } as Player)
-  newPlayerModal.value?.close()
 }
 
 async function startGame() {
@@ -85,7 +72,7 @@ async function startGame() {
           :disabled="selectedPlayerIds.length >= 6"
           @click="addPlayer"
         >+ Add Player</button>
-        <button class="btn btn-ghost btn-sm" @click="openNewPlayerModal">+ New Player</button>
+        <button class="btn btn-ghost btn-sm" @click="newPlayerModal?.open()">+ New Player</button>
       </div>
       <button
         class="btn btn-primary"
@@ -95,23 +82,5 @@ async function startGame() {
     </div>
   </AppCard>
 
-  <dialog ref="newPlayerModal" class="modal">
-    <div class="modal-box">
-      <h3 class="font-bold text-lg mb-4">New Player</h3>
-      <input
-        v-model="newPlayerName"
-        type="text"
-        placeholder="Player name"
-        class="input input-bordered w-full"
-        @keyup.enter="createPlayer"
-      />
-      <div class="modal-action">
-        <button class="btn btn-ghost" @click="newPlayerModal?.close()">Cancel</button>
-        <button class="btn btn-primary" :disabled="!newPlayerName.trim()" @click="createPlayer">
-          Create
-        </button>
-      </div>
-    </div>
-    <form method="dialog" class="modal-backdrop"><button>close</button></form>
-  </dialog>
+  <NewPlayerModal ref="newPlayerModal" />
 </template>
