@@ -35,10 +35,12 @@ function stashPoints() {
 
 function stashThreePairs() {
   stashedPoints.value += 750
+  turnPoints.value = 0
 }
 
 function stashStraight() {
   stashedPoints.value += 1500
+  turnPoints.value = 0
 }
 
 async function bank() {
