@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import { db } from '~/db'
 import type { Game, GamePlayer } from '~/db'
 
@@ -27,13 +28,24 @@ const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
     return { game, players: playersSorted, winnerName: winner?.playerName ?? 'Unknown', winnerScore: winner?.totalScore ?? 0 }
   }))
 }, [])
+
+const hideAborted = ref(false)
+const displayedGames = computed(() =>
+  hideAborted.value ? finishedGames.value.filter(s => s.winnerScore >= 10000) : finishedGames.value
+)
 </script>
 
 <template>
-  <h1>Past Games</h1>
-  <p v-if="finishedGames.length === 0" class="text-base-content/60 text-center mt-8">No games finished yet.</p>
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="mb-0">Past Games</h1>
+    <label class="flex items-center gap-2 text-sm cursor-pointer">
+      <span>Hide aborted</span>
+      <input type="checkbox" v-model="hideAborted" class="toggle toggle-sm" />
+    </label>
+  </div>
+  <p v-if="displayedGames.length === 0" class="text-base-content/60 text-center mt-8">No games finished yet.</p>
   <div class="space-y-4">
-    <AppCard v-for="summary in finishedGames" :key="summary.game.id" shadow="shadow-sm" compact>
+    <AppCard v-for="summary in displayedGames" :key="summary.game.id" shadow="shadow-sm" compact>
       <div class="flex justify-between items-center">
         <span class="text-sm text-base-content/60 font-medium">
           {{ summary.game.startedAt.toLocaleDateString() }}
