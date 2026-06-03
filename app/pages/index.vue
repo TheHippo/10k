@@ -150,11 +150,11 @@ async function endGame() {
         </div>
 
         <div class="flex gap-2">
-          <button class="btn btn-outline btn-sm flex-1" @click="stashThreePairs">
-            Three Pairs (+750)
+          <button class="btn btn-outline btn-sm flex-1 gap-2" @click="stashThreePairs">
+            <Icon name="heroicons:squares-2x2" class="size-4" /> Three Pairs (+750)
           </button>
-          <button class="btn btn-outline btn-sm flex-1" @click="stashStraight">
-            Straight 1–6 (+1500)
+          <button class="btn btn-outline btn-sm flex-1 gap-2" @click="stashStraight">
+            <Icon name="heroicons:bars-4" class="size-4" /> Straight 1–6 (+1500)
           </button>
         </div>
 
@@ -167,14 +167,14 @@ async function endGame() {
           class="input input-bordered w-full"
         />
         <div class="flex gap-3">
-          <button class="btn btn-info flex-1" :disabled="turnPoints < 350" @click="stashPoints">
-            Stash & Roll Again
+          <button class="btn btn-info flex-1 gap-2" :disabled="turnPoints < 350" @click="stashPoints">
+            <Icon name="heroicons:archive-box-arrow-down" class="size-4" /> Stash
           </button>
-          <button class="btn btn-success flex-1" :disabled="turnPoints < 350" @click="bank">
-            Bank
+          <button class="btn btn-success flex-1 gap-2" :disabled="turnPoints < 350" @click="bank">
+            <Icon name="heroicons:banknotes" class="size-4" /> Bank
           </button>
-          <button class="btn btn-error flex-1" @click="farkle">
-            Farkle
+          <button class="btn btn-error flex-1 gap-2" @click="farkle">
+            <Icon name="heroicons:fire" class="size-4" /> Farkle
           </button>
         </div>
         <p v-if="turnPoints > 0 && turnPoints < 350" class="text-sm text-warning">
@@ -182,7 +182,9 @@ async function endGame() {
         </p>
 
         <div class="card-actions justify-end mt-2">
-          <button class="btn btn-ghost btn-sm" @click="endGame">End Game</button>
+          <button class="btn btn-ghost btn-sm gap-2" @click="endGame">
+            <Icon name="heroicons:flag" class="size-4" /> End Game
+          </button>
         </div>
     </AppCard>
 

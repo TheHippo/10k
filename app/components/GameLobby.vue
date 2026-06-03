@@ -61,24 +61,26 @@ async function startGame() {
           class="btn btn-ghost btn-square"
           :disabled="selectedPlayerIds.length <= 2"
           @click="removePlayer(i)"
-        >✕</button>
+        ><Icon name="heroicons:x-mark" class="size-4" /></button>
       </div>
     </div>
 
     <div class="card-actions justify-between mt-4">
       <div class="flex gap-2">
         <button
-          class="btn btn-neutral btn-sm"
+          class="btn btn-neutral btn-sm gap-2"
           :disabled="selectedPlayerIds.length >= 6"
           @click="addPlayer"
-        >Add Player</button>
-        <button class="btn btn-neutral btn-sm" @click="newPlayerModal?.open()">New Player</button>
+        ><Icon name="heroicons:user-plus" class="size-4" /> Add Player</button>
+        <button class="btn btn-neutral btn-sm gap-2" @click="newPlayerModal?.open()">
+          <Icon name="heroicons:user-plus" class="size-4" /> New Player
+        </button>
       </div>
       <button
-        class="btn btn-primary btn-sm"
+        class="btn btn-primary btn-sm gap-2"
         :disabled="selectedPlayerIds.some(id => id === null)"
         @click="startGame"
-      >Start Game</button>
+      ><Icon name="heroicons:play" class="size-4" /> Start Game</button>
     </div>
   </AppCard>
 

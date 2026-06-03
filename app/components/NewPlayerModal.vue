@@ -33,9 +33,11 @@ defineExpose({ open })
         @keyup.enter="createPlayer"
       />
       <div class="modal-action">
-        <button class="btn btn-ghost" @click="dialogRef?.close()">Cancel</button>
-        <button class="btn btn-primary" :disabled="!newPlayerName.trim()" @click="createPlayer">
-          Create
+        <button class="btn btn-ghost gap-2" @click="dialogRef?.close()">
+          <Icon name="heroicons:x-mark" class="size-4" /> Cancel
+        </button>
+        <button class="btn btn-primary gap-2" :disabled="!newPlayerName.trim()" @click="createPlayer">
+          <Icon name="heroicons:check" class="size-4" /> Create
         </button>
       </div>
     </div>

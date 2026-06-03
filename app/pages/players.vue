@@ -27,7 +27,9 @@ async function removePlayer() {
 <template>
   <div class="flex justify-between items-center mb-4">
     <h1 class="mb-0">Players</h1>
-    <button class="btn btn-primary btn-sm" @click="newPlayerModal?.open()">New Player</button>
+    <button class="btn btn-primary btn-sm gap-2" @click="newPlayerModal?.open()">
+      <Icon name="heroicons:user-plus" class="size-4" /> New Player
+    </button>
   </div>
 
   <p v-if="players.length === 0" class="text-base-content/60 text-center mt-8">
@@ -37,7 +39,9 @@ async function removePlayer() {
     <ul class="space-y-2">
       <li v-for="p in players" :key="p.id" class="flex justify-between items-center">
         <span>{{ p.name }}</span>
-        <button class="btn btn-ghost btn-sm btn-square text-error" @click="askRemove(p)">✕</button>
+        <button class="btn btn-ghost btn-sm btn-square text-error" @click="askRemove(p)">
+          <Icon name="heroicons:x-mark" class="size-4" />
+        </button>
       </li>
     </ul>
   </AppCard>
@@ -50,9 +54,11 @@ async function removePlayer() {
       <p class="py-4">Remove <strong>{{ playerToDelete?.name }}</strong> from the player list?</p>
       <div class="modal-action">
         <form method="dialog">
-          <button class="btn">Cancel</button>
+          <button class="btn gap-2"><Icon name="heroicons:x-mark" class="size-4" /> Cancel</button>
         </form>
-        <button class="btn btn-error" @click="removePlayer">Remove</button>
+        <button class="btn btn-error gap-2" @click="removePlayer">
+          <Icon name="heroicons:trash" class="size-4" /> Remove
+        </button>
       </div>
     </div>
     <form method="dialog" class="modal-backdrop"><button>close</button></form>

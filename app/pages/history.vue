@@ -39,6 +39,7 @@ const displayedGames = computed(() =>
   <div class="flex justify-between items-center mb-4">
     <h1 class="mb-0">Past Games</h1>
     <label class="flex items-center gap-2 text-sm cursor-pointer">
+      <Icon name="heroicons:funnel" class="size-4" />
       <span>Hide aborted</span>
       <input type="checkbox" v-model="hideAborted" class="toggle toggle-sm" />
     </label>

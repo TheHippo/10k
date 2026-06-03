@@ -9,6 +9,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "10k@workspace:."
   dependencies:
+    "@nuxt/icon": ^2.2.3
     "@tailwindcss/vite": latest
     daisyui: latest
     dexie: ^4.4.2
@@ -18,6 +19,16 @@ __metadata:
     vue-router: ^5.0.7
   languageName: unknown
   linkType: soft
+
+"@antfu/install-pkg@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@antfu/install-pkg@npm:1.1.0"
+  dependencies:
+    package-manager-detector: ^1.3.0
+    tinyexec: ^1.0.1
+  checksum: e20b7cd1c37eff832cc878cddd794f8c3779175681cf6d75c4cc1ae1475526126a4c1f71fa027161aa1ee35a8850782be9ca0ec01b621893defebe97ba9dc70e
+  languageName: node
+  linkType: hard
 
 "@babel/code-frame@npm:^7.27.1, @babel/code-frame@npm:^7.28.6, @babel/code-frame@npm:^7.29.0":
   version: 7.29.0
@@ -828,6 +839,44 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@iconify/collections@npm:^1.0.691":
+  version: 1.0.692
+  resolution: "@iconify/collections@npm:1.0.692"
+  dependencies:
+    "@iconify/types": "*"
+  checksum: 3ac28d3088895f05b2edbf5251dadb2fceaa616aaadaf33a3b5409313199e41cfe56c869655753fc1a3b7be860980b48fb26f91c9798c5a036b53a87a626c7e8
+  languageName: node
+  linkType: hard
+
+"@iconify/types@npm:*, @iconify/types@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@iconify/types@npm:2.0.0"
+  checksum: 029f58542c160e9d4a746869cf2e475b603424d3adf3994c5cc8d0406c47e6e04a3b898b2707840c1c5b9bd5563a1660a34b110d89fce43923baca5222f4e597
+  languageName: node
+  linkType: hard
+
+"@iconify/utils@npm:^3.1.3":
+  version: 3.1.3
+  resolution: "@iconify/utils@npm:3.1.3"
+  dependencies:
+    "@antfu/install-pkg": ^1.1.0
+    "@iconify/types": ^2.0.0
+    import-meta-resolve: ^4.2.0
+  checksum: 63f43869a679185604ea1f65f8107532afe2e0e6aa4e1666d97885589ea95311b9bff0501ddbda4d239757b383f70b5291092fa2600a39a6b61771c525d4fa22
+  languageName: node
+  linkType: hard
+
+"@iconify/vue@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "@iconify/vue@npm:5.0.1"
+  dependencies:
+    "@iconify/types": ^2.0.0
+  peerDependencies:
+    vue: ">=3.0.0"
+  checksum: 7c73efd965cca4d549b4872e60deca6876312e2d1aa7871f4d76305c86b4c9909f6dfcecb30eb5407bc4d61f2662d7b2da04dec9abf0c2714cb5356ccd59f726
+  languageName: node
+  linkType: hard
+
 "@ioredis/commands@npm:1.5.1":
   version: 1.5.1
   resolution: "@ioredis/commands@npm:1.5.1"
@@ -1037,7 +1086,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nuxt/devtools-kit@npm:3.2.4":
+"@nuxt/devtools-kit@npm:3.2.4, @nuxt/devtools-kit@npm:^3.2.4":
   version: 3.2.4
   resolution: "@nuxt/devtools-kit@npm:3.2.4"
   dependencies:
@@ -1115,6 +1164,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nuxt/icon@npm:^2.2.3":
+  version: 2.2.3
+  resolution: "@nuxt/icon@npm:2.2.3"
+  dependencies:
+    "@iconify/collections": ^1.0.691
+    "@iconify/types": ^2.0.0
+    "@iconify/utils": ^3.1.3
+    "@iconify/vue": ^5.0.1
+    "@nuxt/devtools-kit": ^3.2.4
+    "@nuxt/kit": ^4.4.6
+    consola: ^3.4.2
+    local-pkg: ^1.2.1
+    mlly: ^1.8.2
+    ohash: ^2.0.11
+    picomatch: ^4.0.4
+    std-env: ^4.1.0
+    tinyglobby: ^0.2.17
+    ufo: ^1.6.4
+  checksum: f560176a8e2bc26c2210c973765a6a05f9def3632e6de5060ee3a54e3145bd417a8a7ed180205533c5420f494726a946bf9369cdb62787a6d8bfd183449492ab
+  languageName: node
+  linkType: hard
+
 "@nuxt/kit@npm:4.4.6, @nuxt/kit@npm:^4.4.2":
   version: 4.4.6
   resolution: "@nuxt/kit@npm:4.4.6"
@@ -1140,6 +1211,34 @@ __metadata:
     unctx: ^2.5.0
     untyped: ^2.0.0
   checksum: d0886745b4237b9f78fcef927f1a0eb33d2533cb9dc70b650e9dc1f5371c6d9da50f34706351a619e585202a6e53d92ab52f78deb0f336a17211bb07b77a1aa2
+  languageName: node
+  linkType: hard
+
+"@nuxt/kit@npm:^4.4.6":
+  version: 4.4.7
+  resolution: "@nuxt/kit@npm:4.4.7"
+  dependencies:
+    c12: ^3.3.4
+    consola: ^3.4.2
+    defu: ^6.1.7
+    destr: ^2.0.5
+    errx: ^0.1.0
+    exsolve: ^1.0.8
+    ignore: ^7.0.5
+    jiti: ^2.7.0
+    klona: ^2.0.6
+    mlly: ^1.8.2
+    ohash: ^2.0.11
+    pathe: ^2.0.3
+    pkg-types: ^2.3.1
+    rc9: ^3.0.1
+    scule: ^1.3.0
+    semver: ^7.8.1
+    tinyglobby: ^0.2.17
+    ufo: ^1.6.4
+    unctx: ^2.5.0
+    untyped: ^2.0.0
+  checksum: 9786ccfef53be133d69dc747be3e50922da3678ac5a463dfc3d60d48d7008c474832c5add635418f5ab7c9193fa23576a8f4e276edd654f1557410f07d27b541
   languageName: node
   linkType: hard
 
@@ -4480,6 +4579,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"import-meta-resolve@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "import-meta-resolve@npm:4.2.0"
+  checksum: fe5ca3258f22dc3dd4e2f2e8f6b54324c1cf0261216c7d9aae801b2eadf664bbd61e26cfb907a1238761285a3e9c8c23403321d52ca0e579c341b8d90c97fa52
+  languageName: node
+  linkType: hard
+
 "impound@npm:^1.1.5":
   version: 1.1.5
   resolution: "impound@npm:1.1.5"
@@ -4932,6 +5038,17 @@ __metadata:
     pkg-types: ^2.3.1
     quansync: ^1.0.0
   checksum: 671f9660f275d14b19e105e6cf34fac1c4e2596fe98cb7593c0c410e2f1cf728763d9e6f2f02fb20905f11f7cac6757bc01ca3db358a7ada208463646f9f8184
+  languageName: node
+  linkType: hard
+
+"local-pkg@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "local-pkg@npm:1.2.1"
+  dependencies:
+    mlly: ^1.7.4
+    pkg-types: ^2.3.0
+    quansync: ^0.2.11
+  checksum: 3d1718c40c764ffae05966df5989f9d7ac86e17fbd69e0f46c8cddb3582ae1ac4f011f7ea72d294dd1d4ac23d0d15258f77c8da2cf2fa2925a883b7580b6e83c
   languageName: node
   linkType: hard
 
@@ -5837,6 +5954,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"package-manager-detector@npm:^1.3.0":
+  version: 1.6.0
+  resolution: "package-manager-detector@npm:1.6.0"
+  checksum: 154d55225e70e32582f59b5d4a46d25716f0730a14d7e4b6f0fd76c870c720cc6f448d2becca06a15f2042492f0293cf26e5ad8fcd85d0eab0af3b9b46c0b43a
+  languageName: node
+  linkType: hard
+
 "parseurl@npm:^1.3.3":
   version: 1.3.3
   resolution: "parseurl@npm:1.3.3"
@@ -6332,6 +6456,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"quansync@npm:^0.2.11":
+  version: 0.2.11
+  resolution: "quansync@npm:0.2.11"
+  checksum: af484ed433f752c092d278232f68a6643e2cf0193f95ec60c84245e1f3662ef64da90f8fb1bc57dd407362ff181f246a9304ba53725dd7122f45c4a839f85a61
+  languageName: node
+  linkType: hard
+
 "quansync@npm:^1.0.0":
   version: 1.0.0
   resolution: "quansync@npm:1.0.0"
@@ -6673,6 +6804,15 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: 68e38bc26ed1191d7c78d2b711bdffc2f8b1d05a1caadda41a1d7e1a9d32e1da5ae5b645de5c5f2b27bde830d7e9c1cbeeafcb8fda091830411df7d40be405b1
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.8.1":
+  version: 7.8.1
+  resolution: "semver@npm:7.8.1"
+  bin:
+    semver: bin/semver.js
+  checksum: c6486ac12dc85120fc1daac8001350a4cd8126933720da496b0e8b841f170a35d4856b898b5288dfe7c1771bcadbf32c582254eade40ba16f8b6d296625d2b33
   languageName: node
   linkType: hard
 
@@ -7118,6 +7258,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tinyexec@npm:^1.0.1":
+  version: 1.2.4
+  resolution: "tinyexec@npm:1.2.4"
+  checksum: 3004b0f784c17d35a87251059dd6d81685848472a21a8c258f7b6c0433a25e37552f3955b0844f422895711fae24f44a8b1165597b8b0fe3fe8d0a25264fe9d9
+  languageName: node
+  linkType: hard
+
 "tinyexec@npm:^1.1.1, tinyexec@npm:^1.1.2":
   version: 1.1.2
   resolution: "tinyexec@npm:1.1.2"
@@ -7132,6 +7279,16 @@ __metadata:
     fdir: ^6.5.0
     picomatch: ^4.0.4
   checksum: db9d22ce1deb1095720a683c492cd5e80da0f71fed21ed697e2752f6f298edd8a1249dab197c86a26f001c180594a81bf532400fe519791ed2a2cb57b03bc337
+  languageName: node
+  linkType: hard
+
+"tinyglobby@npm:^0.2.17":
+  version: 0.2.17
+  resolution: "tinyglobby@npm:0.2.17"
+  dependencies:
+    fdir: ^6.5.0
+    picomatch: ^4.0.4
+  checksum: 041e73eae568152c376551b21b8a27909d474166a8f405cdb0345991c50cf6afd0f878d7a387645d9c05d8ea2c9a55cc2fd2cfe6c5d5a5264770972b1adcad86
   languageName: node
   linkType: hard
 
