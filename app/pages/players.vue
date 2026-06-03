@@ -27,7 +27,7 @@ async function removePlayer() {
 <template>
   <div class="flex justify-between items-center mb-4">
     <h1 class="mb-0">Players</h1>
-    <button class="btn btn-primary btn-sm" @click="newPlayerModal?.open()">+ New Player</button>
+    <button class="btn btn-primary btn-sm" @click="newPlayerModal?.open()">New Player</button>
   </div>
 
   <p v-if="players.length === 0" class="text-base-content/60 text-center mt-8">
