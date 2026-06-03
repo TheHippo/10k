@@ -68,14 +68,14 @@ async function startGame() {
     <div class="card-actions justify-between mt-4">
       <div class="flex gap-2">
         <button
-          class="btn btn-ghost btn-sm"
+          class="btn btn-neutral btn-sm"
           :disabled="selectedPlayerIds.length >= 6"
           @click="addPlayer"
-        >+ Add Player</button>
-        <button class="btn btn-ghost btn-sm" @click="newPlayerModal?.open()">+ New Player</button>
+        >Add Player</button>
+        <button class="btn btn-neutral btn-sm" @click="newPlayerModal?.open()">New Player</button>
       </div>
       <button
-        class="btn btn-primary"
+        class="btn btn-primary btn-sm"
         :disabled="selectedPlayerIds.some(id => id === null)"
         @click="startGame"
       >Start Game</button>
