@@ -21,6 +21,7 @@ function closeDrawer() {
 </script>
 
 <template>
+  <NuxtPwaManifest />
   <div class="drawer lg:drawer-open">
     <input ref="drawerToggle" id="nav-drawer" type="checkbox" class="drawer-toggle" />
 
