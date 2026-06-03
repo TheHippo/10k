@@ -8,9 +8,19 @@ const players = useLiveQuery(
 )
 
 const newPlayerModal = ref<{ open: () => void } | null>(null)
+const confirmDialogRef = ref<HTMLDialogElement | null>(null)
+const playerToDelete = ref<{ id: number; name: string } | null>(null)
 
-async function removePlayer(id: number) {
-  await db.players.update(id, { deleted: true })
+function askRemove(player: { id: number; name: string }) {
+  playerToDelete.value = player
+  confirmDialogRef.value?.showModal()
+}
+
+async function removePlayer() {
+  if (!playerToDelete.value) return
+  await db.players.update(playerToDelete.value.id, { deleted: true })
+  confirmDialogRef.value?.close()
+  playerToDelete.value = null
 }
 </script>
 
@@ -27,10 +37,24 @@ async function removePlayer(id: number) {
     <ul class="space-y-2">
       <li v-for="p in players" :key="p.id" class="flex justify-between items-center">
         <span>{{ p.name }}</span>
-        <button class="btn btn-ghost btn-sm btn-square text-error" @click="removePlayer(p.id)">✕</button>
+        <button class="btn btn-ghost btn-sm btn-square text-error" @click="askRemove(p)">✕</button>
       </li>
     </ul>
   </AppCard>
 
   <NewPlayerModal ref="newPlayerModal" />
+
+  <dialog ref="confirmDialogRef" class="modal">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg">Remove player?</h3>
+      <p class="py-4">Remove <strong>{{ playerToDelete?.name }}</strong> from the player list?</p>
+      <div class="modal-action">
+        <form method="dialog">
+          <button class="btn">Cancel</button>
+        </form>
+        <button class="btn btn-error" @click="removePlayer">Remove</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+  </dialog>
 </template>
