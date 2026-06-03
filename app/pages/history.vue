@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { db } from '~/db'
 import type { Game, GamePlayer } from '~/db'
 
@@ -29,7 +29,7 @@ const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
   }))
 }, [])
 
-const hideAborted = ref(false)
+const hideAborted = useLocalStorage('history:hideAborted', false)
 const displayedGames = computed(() =>
   hideAborted.value ? finishedGames.value.filter(s => s.winnerScore >= 10000) : finishedGames.value
 )
