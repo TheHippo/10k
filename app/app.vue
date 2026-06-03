@@ -40,7 +40,7 @@ function closeDrawer() {
       <ul class="menu bg-base-200 min-h-full w-64 p-4">
         <li>
           <NuxtLink to="/" :class="{ 'menu-active': route.path === '/' }" @click="closeDrawer">
-            Game
+            New Game
           </NuxtLink>
         </li>
         <li>
