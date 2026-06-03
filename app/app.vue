@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+useHead({
+  link: [
+    { rel: 'icon', href: '/icons/favicon.ico', sizes: 'any' },
+    { rel: 'icon', href: '/icons/source.svg', type: 'image/svg+xml' },
+    { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon-180x180.png' },
+  ],
+  meta: [
+    { name: 'theme-color', content: '#1d232a' },
+  ],
+})
+
 const route = useRoute()
 const drawerToggle = ref<HTMLInputElement | null>(null)
 
