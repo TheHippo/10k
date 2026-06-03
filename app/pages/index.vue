@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { db } from '~/db'
+import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS } from '~/constants/game'
 import type { Game, GamePlayer, Turn } from '~/db'
 
 interface GamePlayerWithName extends GamePlayer {
@@ -28,23 +29,23 @@ const turnPoints = ref(0)
 const stashedPoints = ref(0)
 
 function stashPoints() {
-  if (turnPoints.value < 350) return
+  if (turnPoints.value < MIN_STASH_POINTS) return
   stashedPoints.value += turnPoints.value
   turnPoints.value = 0
 }
 
 function stashThreePairs() {
-  stashedPoints.value += 750
+  stashedPoints.value += THREE_PAIRS_POINTS
   turnPoints.value = 0
 }
 
 function stashStraight() {
-  stashedPoints.value += 1500
+  stashedPoints.value += STRAIGHT_POINTS
   turnPoints.value = 0
 }
 
 async function bank() {
-  if (!activeGame.value || turnPoints.value < 350) return
+  if (!activeGame.value || turnPoints.value < MIN_STASH_POINTS) return
   const game = activeGame.value
   const gp = activeGamePlayers.value.find(p => p.id === game.currentGamePlayerId)
   if (!gp) return
@@ -148,15 +149,15 @@ async function endGame() {
         <div class="divider">Current Turn</div>
 
         <div v-if="stashedPoints > 0" class="alert alert-info py-2">
-          <span>Stashed: <strong>{{ stashedPoints }} pts</strong> — roll all 6 again, need ≥ 350 this roll</span>
+          <span>Stashed: <strong>{{ stashedPoints }} pts</strong> — roll all 6 again, need ≥ {{ MIN_STASH_POINTS }} this roll</span>
         </div>
 
         <div class="flex gap-2">
           <button class="btn btn-outline btn-sm flex-1 gap-2" @click="stashThreePairs">
-            <Icon name="heroicons:squares-2x2" class="size-4" /> Three Pairs (+750)
+            <Icon name="heroicons:squares-2x2" class="size-4" /> Three Pairs (+{{ THREE_PAIRS_POINTS }})
           </button>
           <button class="btn btn-outline btn-sm flex-1 gap-2" @click="stashStraight">
-            <Icon name="heroicons:bars-4" class="size-4" /> Straight 1–6 (+1500)
+            <Icon name="heroicons:bars-4" class="size-4" /> Straight 1–6 (+{{ STRAIGHT_POINTS }})
           </button>
         </div>
 
@@ -169,18 +170,18 @@ async function endGame() {
           class="input input-bordered w-full"
         />
         <div class="flex gap-3">
-          <button class="btn btn-info flex-1 gap-2" :disabled="turnPoints < 350" @click="stashPoints">
+          <button class="btn btn-info flex-1 gap-2" :disabled="turnPoints < MIN_STASH_POINTS" @click="stashPoints">
             <Icon name="heroicons:archive-box-arrow-down" class="size-4" /> Stash
           </button>
-          <button class="btn btn-success flex-1 gap-2" :disabled="turnPoints < 350" @click="bank">
+          <button class="btn btn-success flex-1 gap-2" :disabled="turnPoints < MIN_STASH_POINTS" @click="bank">
             <Icon name="heroicons:banknotes" class="size-4" /> Bank
           </button>
           <button class="btn btn-error flex-1 gap-2" @click="farkle">
             <Icon name="heroicons:fire" class="size-4" /> Farkle
           </button>
         </div>
-        <p v-if="turnPoints > 0 && turnPoints < 350" class="text-sm text-warning">
-          Need at least 350 points this roll to bank or stash.<span v-if="stashedPoints > 0"> Rolling under 350 loses your {{ stashedPoints }} stashed points too.</span>
+        <p v-if="turnPoints > 0 && turnPoints < MIN_STASH_POINTS" class="text-sm text-warning">
+          Need at least {{ MIN_STASH_POINTS }} points this roll to bank or stash.<span v-if="stashedPoints > 0"> Rolling under {{ MIN_STASH_POINTS }} loses your {{ stashedPoints }} stashed points too.</span>
         </p>
 
         <div class="card-actions justify-end mt-2">
