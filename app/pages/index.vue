@@ -184,7 +184,7 @@ async function endGame() {
         </p>
 
         <div class="card-actions justify-end mt-2">
-          <button class="btn btn-ghost btn-sm gap-2" @click="endGame">
+          <button class="btn btn-neutral btn-sm gap-2" @click="endGame">
             <Icon name="heroicons:flag" class="size-4" /> End Game
           </button>
         </div>
