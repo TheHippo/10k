@@ -14,6 +14,8 @@ interface FinishedGameSummary {
   winnerScore: number
 }
 
+useHead({ title: 'Past Games' })
+
 const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
   const games = await db.games.where('status').equals('finished').toArray()
   games.sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 
 useHead({
+  titleTemplate: (title) => title ? `10,000 - ${title}` : '10,000',
   link: [
     { rel: 'icon', href: '/icons/favicon.ico', sizes: 'any' },
     { rel: 'icon', href: '/icons/source.svg', type: 'image/svg+xml' },

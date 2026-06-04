@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { db } from '~/db'
 
+useHead({ title: 'Players' })
+
 const players = useLiveQuery(
   () => db.players.orderBy('name').filter(p => !p.deleted).toArray(),
   []
