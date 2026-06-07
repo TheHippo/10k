@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { db } from '~/db'
 import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS } from '~/constants/game'
 import type { Game, GamePlayer, GamePlayerWithName, Turn } from '~/interfaces'
@@ -23,6 +23,7 @@ const activeGamePlayers = useLiveQuery<GamePlayerWithName[]>(async () => {
 
 const turnPoints = ref(0)
 const stashedPoints = ref(0)
+const isNotDivisibleBy50 = computed(() => turnPoints.value > 0 && turnPoints.value % 50 !== 0)
 
 function stashPoints() {
   if (turnPoints.value < MIN_STASH_POINTS) return
@@ -165,20 +166,25 @@ async function endGame() {
           placeholder="Points scored this roll"
           class="input input-bordered w-full"
         />
+        <div v-if="isNotDivisibleBy50 && turnPoints >= MIN_STASH_POINTS" class="alert alert-warning py-2">
+          <Icon name="heroicons:exclamation-triangle" class="size-4 shrink-0" />
+          <span>Points must be divisible by 50.</span>
+        </div>
+        <div v-if="turnPoints > 0 && turnPoints < MIN_STASH_POINTS" class="alert alert-warning py-2">
+          <Icon name="heroicons:exclamation-triangle" class="size-4 shrink-0" />
+          <span>Need at least {{ MIN_STASH_POINTS }} points this roll to bank or stash.<span v-if="stashedPoints > 0"> Rolling under {{ MIN_STASH_POINTS }} loses your {{ stashedPoints }} stashed points too.</span></span>
+        </div>
         <div class="flex gap-3">
-          <button class="btn btn-info flex-1 gap-2" :disabled="turnPoints < MIN_STASH_POINTS" @click="stashPoints">
+          <button class="btn btn-info flex-1 gap-2" :disabled="turnPoints < MIN_STASH_POINTS || isNotDivisibleBy50" @click="stashPoints">
             <Icon name="heroicons:archive-box-arrow-down" class="size-4" /> Stash
           </button>
-          <button class="btn btn-success flex-1 gap-2" :disabled="turnPoints < MIN_STASH_POINTS" @click="bank">
+          <button class="btn btn-success flex-1 gap-2" :disabled="turnPoints < MIN_STASH_POINTS || isNotDivisibleBy50" @click="bank">
             <Icon name="heroicons:banknotes" class="size-4" /> Bank
           </button>
           <button class="btn btn-error flex-1 gap-2" @click="farkle">
             <Icon name="heroicons:fire" class="size-4" /> Farkle
           </button>
         </div>
-        <p v-if="turnPoints > 0 && turnPoints < MIN_STASH_POINTS" class="text-sm text-warning">
-          Need at least {{ MIN_STASH_POINTS }} points this roll to bank or stash.<span v-if="stashedPoints > 0"> Rolling under {{ MIN_STASH_POINTS }} loses your {{ stashedPoints }} stashed points too.</span>
-        </p>
 
         <div class="card-actions justify-end mt-2">
           <button class="btn btn-neutral btn-sm gap-2" @click="endGame">
