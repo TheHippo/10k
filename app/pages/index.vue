@@ -2,11 +2,7 @@
 import { ref } from 'vue'
 import { db } from '~/db'
 import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS } from '~/constants/game'
-import type { Game, GamePlayer, Turn } from '~/db'
-
-interface GamePlayerWithName extends GamePlayer {
-  playerName: string
-}
+import type { Game, GamePlayer, GamePlayerWithName, Turn } from '~/interfaces'
 
 const activeGame = useLiveQuery<Game | undefined>(
   () => db.games.where('status').equals('active').first(),

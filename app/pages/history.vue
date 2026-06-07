@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { db } from '~/db'
-import type { Game, GamePlayer } from '~/db'
-
-interface GamePlayerWithName extends GamePlayer {
-  playerName: string
-}
+import type { Game, GamePlayer, GamePlayerWithName } from '~/interfaces'
 
 interface FinishedGameSummary {
   game: Game
