@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import { db } from '~/db'
 import type { Player } from '~/db'
 
+const emit = defineEmits<{ created: [id: number] }>()
+
 const dialogRef = ref<HTMLDialogElement | null>(null)
 const newPlayerName = ref('')
 
@@ -14,7 +16,8 @@ function open() {
 async function createPlayer() {
   const name = newPlayerName.value.trim()
   if (!name) return
-  await db.players.add({ name } as Player)
+  const id = await db.players.add({ name } as Player)
+  emit('created', id)
   dialogRef.value?.close()
 }
 

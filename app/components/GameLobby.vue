@@ -42,6 +42,13 @@ async function startGame() {
 
   selectedPlayerIds.value = [null, null]
 }
+
+function onPlayerCreated(id: number) {
+  const emptyIndex = selectedPlayerIds.value.indexOf(null)
+  if (emptyIndex !== -1) {
+    selectedPlayerIds.value[emptyIndex] = id
+  }
+}
 </script>
 
 <template>
@@ -84,5 +91,5 @@ async function startGame() {
     </div>
   </AppCard>
 
-  <NewPlayerModal ref="newPlayerModal" />
+  <NewPlayerModal ref="newPlayerModal" @created="onPlayerCreated" />
 </template>
