@@ -6,10 +6,17 @@ import { mountWithStubs } from '../setup/mount'
 import { seedActiveGame } from '../setup/fixtures'
 import { click, clickButtonWithText, waitFor } from '../setup/dom'
 
+async function waitForGameReady(wrapper: Awaited<ReturnType<typeof mountWithStubs>>, playerNames: string[]) {
+  await waitFor(() => {
+    expect(wrapper.text()).toContain('Game in Progress')
+    for (const name of playerNames) expect(wrapper.text()).toContain(name)
+  })
+}
+
 async function mountActiveGame(...args: Parameters<typeof seedActiveGame>) {
   const seed = await seedActiveGame(...args)
   const wrapper = await mountWithStubs(IndexPage)
-  await waitFor(() => expect(wrapper.text()).toContain('Game in Progress'))
+  await waitForGameReady(wrapper, args[0])
   return { ...seed, wrapper }
 }
 
@@ -149,7 +156,7 @@ describe('pages/index.vue turn engine', () => {
     const players = await seedActiveGame(['Alice', 'Bob', 'Cara'])
     await db.games.update(players.game.id, { currentGamePlayerId: players.gamePlayers[2].id })
     const wrapper = await mountWithStubs(IndexPage)
-    await waitFor(() => expect(wrapper.text()).toContain('Game in Progress'))
+    await waitForGameReady(wrapper, ['Alice', 'Bob', 'Cara'])
 
     await click(wrapper, 'button.btn-error')
 
