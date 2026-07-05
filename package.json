@@ -7,7 +7,10 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@nuxt/icon": "^2.2.3",
@@ -20,6 +23,12 @@
     "vue-router": "^5.0.7"
   },
   "devDependencies": {
-    "@vite-pwa/nuxt": "^1.1.1"
+    "@nuxt/test-utils": "^4.0.3",
+    "@vite-pwa/nuxt": "^1.1.1",
+    "@vitest/coverage-v8": "^4.1.9",
+    "@vue/test-utils": "^2.4.11",
+    "fake-indexeddb": "^6.2.5",
+    "happy-dom": "^20.10.6",
+    "vitest": "^4.1.9"
   }
 }
