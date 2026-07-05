@@ -4,8 +4,10 @@
 .nuxt
 .nitro
 .cache
+.nuxtrc
 dist
 .yarn
+coverage
 
 # Node dependencies
 node_modules
