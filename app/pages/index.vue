@@ -19,6 +19,8 @@ const activeGamePlayers = useLiveQuery<GamePlayerWithName[]>(async () => {
   }))
 }, [])
 
+useWakeLock(computed(() => !!activeGame.value))
+
 // --- Active game ---
 
 const turnPoints = ref(0)

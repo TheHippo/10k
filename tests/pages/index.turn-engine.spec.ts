@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import IndexPage from '~/pages/index.vue'
 import { db } from '~/db'
 import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS } from '~/constants/game'
@@ -21,6 +21,34 @@ async function mountActiveGame(...args: Parameters<typeof seedActiveGame>) {
 }
 
 describe('pages/index.vue turn engine', () => {
+  describe('screen wake lock', () => {
+    let requestMock: ReturnType<typeof vi.fn>
+
+    beforeEach(() => {
+      const sentinel = { release: vi.fn(), addEventListener: vi.fn() }
+      requestMock = vi.fn(async () => sentinel)
+      vi.stubGlobal('navigator', { ...navigator, wakeLock: { request: requestMock } })
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('requests a wake lock once a game is in progress', async () => {
+      await mountActiveGame(['Alice', 'Bob'])
+
+      await waitFor(() => expect(requestMock).toHaveBeenCalledWith('screen'))
+    })
+
+    it('does not request a wake lock in the lobby', async () => {
+      const wrapper = await mountWithStubs(IndexPage)
+      await waitFor(() => expect(wrapper.text()).not.toContain('Game in Progress'))
+      await new Promise(resolve => setTimeout(resolve, 20))
+
+      expect(requestMock).not.toHaveBeenCalled()
+    })
+  })
+
   it('disables Stash/Bank and warns below the minimum stash points', async () => {
     const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
