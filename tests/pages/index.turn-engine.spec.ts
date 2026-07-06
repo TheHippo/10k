@@ -51,6 +51,21 @@ describe('pages/index.vue turn engine', () => {
     expect(wrapper.get('button.btn-success').attributes('disabled')).toBeUndefined()
   })
 
+  it('disables the quick-fill button once the input has a value', async () => {
+    const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+    const quickFillButton = wrapper.get(`button[type="button"].btn-outline`)
+    expect(quickFillButton.attributes('disabled')).toBeUndefined()
+
+    await wrapper.get('input[type="number"]').setValue(50)
+
+    expect(quickFillButton.attributes('disabled')).toBeDefined()
+
+    await wrapper.get('input[type="number"]').setValue(0)
+
+    expect(quickFillButton.attributes('disabled')).toBeUndefined()
+  })
+
   it('stash moves turnPoints into stashedPoints and resets turnPoints', async () => {
     const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 

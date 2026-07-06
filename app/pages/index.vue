@@ -167,7 +167,12 @@ async function endGame() {
             placeholder="Points scored this roll"
             class="input input-bordered join-item grow"
           />
-          <button type="button" class="btn btn-outline join-item px-3" @click="turnPoints = MIN_STASH_POINTS">
+          <button
+            type="button"
+            class="btn btn-outline join-item px-3"
+            :disabled="!!turnPoints"
+            @click="turnPoints = MIN_STASH_POINTS"
+          >
             {{ MIN_STASH_POINTS }}
           </button>
         </div>
