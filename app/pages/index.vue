@@ -158,14 +158,19 @@ async function endGame() {
           </button>
         </div>
 
-        <input
-          v-model.number="turnPoints"
-          type="number"
-          min="0"
-          step="50"
-          placeholder="Points scored this roll"
-          class="input input-bordered w-full"
-        />
+        <div class="join w-full">
+          <input
+            v-model.number="turnPoints"
+            type="number"
+            min="0"
+            step="50"
+            placeholder="Points scored this roll"
+            class="input input-bordered join-item grow"
+          />
+          <button type="button" class="btn btn-outline join-item px-3" @click="turnPoints = MIN_STASH_POINTS">
+            {{ MIN_STASH_POINTS }}
+          </button>
+        </div>
         <div v-if="isNotDivisibleBy50 && turnPoints >= MIN_STASH_POINTS" class="alert alert-warning py-2">
           <Icon name="heroicons:exclamation-triangle" class="size-4 shrink-0" />
           <span>Points must be divisible by 50.</span>
