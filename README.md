@@ -1,75 +1,65 @@
-# Nuxt Minimal Starter
+# 10K
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+A browser-only scorekeeper for the dice game **10,000** (also known as Farkle or Zilch). See [`Rules.md`](./Rules.md) for the full rules — scoring combinations, farkle penalties, the 350-point minimum to bank, and winning conditions.
+
+There is no backend: all game and player data is persisted locally in the browser via IndexedDB (using [Dexie](https://dexie.org/)).
+
+## Tech stack
+
+- [Nuxt 4](https://nuxt.com/) (SSR disabled — this is a client-only app)
+- Vue 3
+- Dexie (IndexedDB wrapper) for persistence
+- Tailwind CSS v4 + DaisyUI for styling
+- Vitest for unit tests
 
 ## Setup
 
-Make sure to install dependencies:
+Install dependencies:
 
 ```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
 yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
+## Development
 
-Start the development server on `http://localhost:3000`:
+Start the dev server at `http://localhost:3000`:
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
 yarn dev
-
-# bun
-bun run dev
 ```
 
 ## Production
 
-Build the application for production:
+Build for production:
 
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
 yarn build
-
-# bun
-bun run build
 ```
 
-Locally preview production build:
+Or generate a static site:
 
 ```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+yarn generate
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Preview a production build:
+
+```bash
+yarn preview
+```
+
+## Testing
+
+Run the unit test suite (Vitest):
+
+```bash
+yarn test           # run once
+yarn test:watch     # watch mode
+yarn test:coverage   # with coverage report
+```
+
+Playwright is also installed for local end-to-end testing.
+
+## Architecture
+
+See [`CLAUDE.md`](./CLAUDE.md) for details on the data layer (Dexie schema), reactivity helpers, and key game logic (stashing, banking, farkle penalties, and turn advancement).
