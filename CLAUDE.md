@@ -36,6 +36,10 @@ DaisyUI is based on TailwindCSS, the documentation therefor can be found here: h
 
 **Styling**: Tailwind CSS v4 (via `@tailwindcss/vite`) + DaisyUI. CSS entry is `app/assets/css/main.css` (two lines: import tailwind, register daisyui plugin).
 
+## Testing
+
+`playwright` is installed for local testing.
+
 ## Key game logic
 
 - **Stash**: accumulates points mid-turn without banking; requires ≥ 350 pts this roll; resets `turnPoints` to 0 and adds to `stashedPoints`
