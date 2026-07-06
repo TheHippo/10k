@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import IndexPage from '~/pages/index.vue'
 import { db } from '~/db'
 import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS } from '~/constants/game'
@@ -39,6 +39,29 @@ describe('pages/index.vue turn engine', () => {
     expect(wrapper.text()).toContain('Points must be divisible by 50.')
     expect(wrapper.get('button.btn-info').attributes('disabled')).toBeDefined()
     expect(wrapper.get('button.btn-success').attributes('disabled')).toBeDefined()
+  })
+
+  it('focuses the points input once a game is in progress', async () => {
+    const focusSpy = vi.spyOn(HTMLInputElement.prototype, 'focus')
+
+    await mountActiveGame(['Alice', 'Bob'])
+
+    await waitFor(() => {
+      expect(focusSpy).toHaveBeenCalled()
+    })
+    focusSpy.mockRestore()
+  })
+
+  it('refocuses the points input after farkle so the on-screen keyboard stays open', async () => {
+    const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
+    const focusSpy = vi.spyOn(HTMLInputElement.prototype, 'focus')
+
+    await click(wrapper, 'button.btn-error')
+
+    await waitFor(() => {
+      expect(focusSpy).toHaveBeenCalled()
+    })
+    focusSpy.mockRestore()
   })
 
   it('stash moves turnPoints into stashedPoints and resets turnPoints', async () => {

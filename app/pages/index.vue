@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { db } from '~/db'
 import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS } from '~/constants/game'
 import type { Game, GamePlayer, GamePlayerWithName, Turn } from '~/interfaces'
@@ -25,20 +25,34 @@ const turnPoints = ref(0)
 const stashedPoints = ref(0)
 const isNotDivisibleBy50 = computed(() => turnPoints.value > 0 && turnPoints.value % 50 !== 0)
 
+const pointsInputRef = ref<HTMLInputElement | null>(null)
+
+async function refocusPointsInput() {
+  await nextTick()
+  pointsInputRef.value?.focus()
+}
+
+watch(activeGame, (game) => {
+  if (game) refocusPointsInput()
+})
+
 function stashPoints() {
   if (turnPoints.value < MIN_STASH_POINTS) return
   stashedPoints.value += turnPoints.value
   turnPoints.value = 0
+  refocusPointsInput()
 }
 
 function stashThreePairs() {
   stashedPoints.value += THREE_PAIRS_POINTS
   turnPoints.value = 0
+  refocusPointsInput()
 }
 
 function stashStraight() {
   stashedPoints.value += STRAIGHT_POINTS
   turnPoints.value = 0
+  refocusPointsInput()
 }
 
 async function bank() {
@@ -65,6 +79,7 @@ async function bank() {
 
   turnPoints.value = 0
   stashedPoints.value = 0
+  refocusPointsInput()
 }
 
 async function farkle() {
@@ -91,6 +106,7 @@ async function farkle() {
   })
 
   stashedPoints.value = 0
+  refocusPointsInput()
 }
 
 async function advanceTurn(game: Game) {
@@ -159,6 +175,7 @@ async function endGame() {
         </div>
 
         <input
+          ref="pointsInputRef"
           v-model.number="turnPoints"
           type="number"
           min="0"
