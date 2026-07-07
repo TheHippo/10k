@@ -52,9 +52,8 @@ function onPlayerCreated(id: number) {
 </script>
 
 <template>
+  <h1 class="mb-4">New Game</h1>
   <AppCard>
-    <h1>New Game</h1>
-
     <div class="space-y-2">
       <div v-for="(id, i) in selectedPlayerIds" :key="i" class="flex gap-2">
         <select v-model="selectedPlayerIds[i]" class="select select-bordered flex-1">

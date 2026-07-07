@@ -149,9 +149,8 @@ async function endGame() {
 
 <template>
   <!-- Active game -->
+  <h1 v-if="activeGame" class="mb-4">Game in Progress</h1>
   <AppCard v-if="activeGame">
-        <h1>Game in Progress</h1>
-
         <table class="table">
           <thead>
             <tr>
