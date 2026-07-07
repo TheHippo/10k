@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { db } from '~/db'
-import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS } from '~/constants/game'
+import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS, HIGH_SCORE_CONFIRM_THRESHOLD } from '~/constants/game'
 import type { Game, GamePlayer, GamePlayerWithName, Turn } from '~/interfaces'
 
 const activeGame = useLiveQuery<Game | undefined>(
@@ -26,6 +26,24 @@ useWakeLock(computed(() => !!activeGame.value))
 const turnPoints = ref(0)
 const stashedPoints = ref(0)
 const isNotDivisibleBy50 = computed(() => turnPoints.value > 0 && turnPoints.value % 50 !== 0)
+
+const highScoreDialogRef = ref<HTMLDialogElement | null>(null)
+let pendingHighScoreAction: (() => void) | null = null
+
+function withHighScoreConfirm(action: () => void) {
+  if (turnPoints.value > HIGH_SCORE_CONFIRM_THRESHOLD) {
+    pendingHighScoreAction = action
+    highScoreDialogRef.value?.showModal()
+  } else {
+    action()
+  }
+}
+
+function confirmHighScore() {
+  const action = pendingHighScoreAction
+  highScoreDialogRef.value?.close()
+  action?.()
+}
 
 const pointsInputRef = ref<HTMLInputElement | null>(null)
 
@@ -204,10 +222,10 @@ async function endGame() {
           <span>Need at least {{ MIN_STASH_POINTS }} points this roll to bank or stash.<span v-if="stashedPoints > 0"> Rolling under {{ MIN_STASH_POINTS }} loses your {{ stashedPoints }} stashed points too.</span></span>
         </div>
         <div class="flex gap-3">
-          <button class="btn btn-info flex-1 gap-2" :disabled="turnPoints < MIN_STASH_POINTS || isNotDivisibleBy50" @click="stashPoints">
+          <button class="btn btn-info flex-1 gap-2" :disabled="turnPoints < MIN_STASH_POINTS || isNotDivisibleBy50" @click="withHighScoreConfirm(stashPoints)">
             <Icon name="heroicons:archive-box-arrow-down" class="size-4" /> Stash
           </button>
-          <button class="btn btn-success flex-1 gap-2" :disabled="turnPoints < MIN_STASH_POINTS || isNotDivisibleBy50" @click="bank">
+          <button class="btn btn-success flex-1 gap-2" :disabled="turnPoints < MIN_STASH_POINTS || isNotDivisibleBy50" @click="withHighScoreConfirm(bank)">
             <Icon name="heroicons:banknotes" class="size-4" /> Bank
           </button>
           <button class="btn btn-error flex-1 gap-2" @click="farkle">
@@ -220,6 +238,22 @@ async function endGame() {
             <Icon name="heroicons:flag" class="size-4" /> End Game
           </button>
         </div>
+
+        <dialog ref="highScoreDialogRef" class="modal" @close="pendingHighScoreAction = null">
+          <div class="modal-box">
+            <h3 class="font-bold text-lg mb-4">Confirm high score</h3>
+            <p>You entered <strong>{{ turnPoints }}</strong> points this roll. Did you actually score that many?</p>
+            <div class="modal-action">
+              <button class="btn btn-ghost gap-2" @click="highScoreDialogRef?.close()">
+                <Icon name="heroicons:x-mark" class="size-4" /> Cancel
+              </button>
+              <button class="btn btn-primary gap-2" @click="confirmHighScore">
+                <Icon name="heroicons:check" class="size-4" /> Yes, that's correct
+              </button>
+            </div>
+          </div>
+          <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
     </AppCard>
 
   <!-- Lobby -->

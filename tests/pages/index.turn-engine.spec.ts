@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import IndexPage from '~/pages/index.vue'
 import { db } from '~/db'
-import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS } from '~/constants/game'
+import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS, HIGH_SCORE_CONFIRM_THRESHOLD } from '~/constants/game'
 import { mountWithStubs } from '../setup/mount'
 import { seedActiveGame } from '../setup/fixtures'
 import { click, clickButtonWithText, waitFor } from '../setup/dom'
@@ -156,6 +156,57 @@ describe('pages/index.vue turn engine', () => {
 
     expect(wrapper.text()).toContain(`Stashed: ${STRAIGHT_POINTS} pts`)
     expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('0')
+  })
+
+  it('shows a confirmation dialog before banking an unusually high score', async () => {
+    const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+    await wrapper.get('input[type="number"]').setValue(HIGH_SCORE_CONFIRM_THRESHOLD + 50)
+    await click(wrapper, 'button.btn-success')
+
+    expect(wrapper.get('dialog').element.open).toBe(true)
+    expect(wrapper.text()).toContain('Confirm high score')
+  })
+
+  it('does not show the confirmation dialog for scores at or below the threshold', async () => {
+    const { game, wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+    await wrapper.get('input[type="number"]').setValue(HIGH_SCORE_CONFIRM_THRESHOLD)
+    await click(wrapper, 'button.btn-success')
+
+    expect(wrapper.get('dialog').element.open).toBe(false)
+    await waitFor(async () => {
+      const turns = await db.turns.where('gameId').equals(game.id).toArray()
+      expect(turns).toHaveLength(1)
+    })
+  })
+
+  it('proceeds with banking once the high score is confirmed', async () => {
+    const { game, wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+    await wrapper.get('input[type="number"]').setValue(HIGH_SCORE_CONFIRM_THRESHOLD + 50)
+    await click(wrapper, 'button.btn-success')
+    await clickButtonWithText(wrapper, 'Yes, that\'s correct')
+
+    expect(wrapper.get('dialog').element.open).toBe(false)
+    await waitFor(async () => {
+      const turns = await db.turns.where('gameId').equals(game.id).toArray()
+      expect(turns).toHaveLength(1)
+      expect(turns[0]).toMatchObject({ pointsBanked: HIGH_SCORE_CONFIRM_THRESHOLD + 50 })
+    })
+  })
+
+  it('cancels the pending action and keeps turnPoints unchanged when a high score is not confirmed', async () => {
+    const { game, wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+    await wrapper.get('input[type="number"]').setValue(HIGH_SCORE_CONFIRM_THRESHOLD + 50)
+    await click(wrapper, 'button.btn-success')
+    await clickButtonWithText(wrapper, 'Cancel')
+
+    expect(wrapper.get('dialog').element.open).toBe(false)
+    expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe(String(HIGH_SCORE_CONFIRM_THRESHOLD + 50))
+    const turns = await db.turns.where('gameId').equals(game.id).toArray()
+    expect(turns).toHaveLength(0)
   })
 
   it('bank commits stashed+turn points, resets the farkle streak, and advances the turn', async () => {
