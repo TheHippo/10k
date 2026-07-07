@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import IndexPage from '~/pages/index.vue'
 import { db } from '~/db'
 import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS, HIGH_SCORE_CONFIRM_THRESHOLD } from '~/constants/game'
@@ -21,6 +21,34 @@ async function mountActiveGame(...args: Parameters<typeof seedActiveGame>) {
 }
 
 describe('pages/index.vue turn engine', () => {
+  describe('screen wake lock', () => {
+    let requestMock: ReturnType<typeof vi.fn>
+
+    beforeEach(() => {
+      const sentinel = { release: vi.fn(), addEventListener: vi.fn() }
+      requestMock = vi.fn(async () => sentinel)
+      vi.stubGlobal('navigator', { ...navigator, wakeLock: { request: requestMock } })
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('requests a wake lock once a game is in progress', async () => {
+      await mountActiveGame(['Alice', 'Bob'])
+
+      await waitFor(() => expect(requestMock).toHaveBeenCalledWith('screen'))
+    })
+
+    it('does not request a wake lock in the lobby', async () => {
+      const wrapper = await mountWithStubs(IndexPage)
+      await waitFor(() => expect(wrapper.text()).not.toContain('Game in Progress'))
+      await new Promise(resolve => setTimeout(resolve, 20))
+
+      expect(requestMock).not.toHaveBeenCalled()
+    })
+  })
+
   it('disables Stash/Bank and warns below the minimum stash points', async () => {
     const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
@@ -39,6 +67,54 @@ describe('pages/index.vue turn engine', () => {
     expect(wrapper.text()).toContain('Points must be divisible by 50.')
     expect(wrapper.get('button.btn-info').attributes('disabled')).toBeDefined()
     expect(wrapper.get('button.btn-success').attributes('disabled')).toBeDefined()
+  })
+
+  it('focuses the points input once a game is in progress', async () => {
+    const focusSpy = vi.spyOn(HTMLInputElement.prototype, 'focus')
+
+    await mountActiveGame(['Alice', 'Bob'])
+
+    await waitFor(() => {
+      expect(focusSpy).toHaveBeenCalled()
+    })
+    focusSpy.mockRestore()
+  })
+
+  it('refocuses the points input after farkle so the on-screen keyboard stays open', async () => {
+    const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
+    const focusSpy = vi.spyOn(HTMLInputElement.prototype, 'focus')
+
+    await click(wrapper, 'button.btn-error')
+
+    await waitFor(() => {
+      expect(focusSpy).toHaveBeenCalled()
+    })
+    focusSpy.mockRestore()
+  })
+
+  it('the quick-fill button sets turnPoints to the minimum stash points', async () => {
+    const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+    await clickButtonWithText(wrapper, String(MIN_STASH_POINTS))
+
+    expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe(String(MIN_STASH_POINTS))
+    expect(wrapper.get('button.btn-info').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('button.btn-success').attributes('disabled')).toBeUndefined()
+  })
+
+  it('disables the quick-fill button once the input has a value', async () => {
+    const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+    const quickFillButton = wrapper.get(`button[type="button"].btn-outline`)
+    expect(quickFillButton.attributes('disabled')).toBeUndefined()
+
+    await wrapper.get('input[type="number"]').setValue(50)
+
+    expect(quickFillButton.attributes('disabled')).toBeDefined()
+
+    await wrapper.get('input[type="number"]').setValue(0)
+
+    expect(quickFillButton.attributes('disabled')).toBeUndefined()
   })
 
   it('stash moves turnPoints into stashedPoints and resets turnPoints', async () => {

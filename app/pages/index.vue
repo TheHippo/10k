@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { db } from '~/db'
 import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS, HIGH_SCORE_CONFIRM_THRESHOLD } from '~/constants/game'
 import type { Game, GamePlayer, GamePlayerWithName, Turn } from '~/interfaces'
@@ -18,6 +18,8 @@ const activeGamePlayers = useLiveQuery<GamePlayerWithName[]>(async () => {
     return { ...gp, playerName: player?.name ?? 'Unknown' }
   }))
 }, [])
+
+useWakeLock(computed(() => !!activeGame.value))
 
 // --- Active game ---
 
@@ -43,20 +45,34 @@ function confirmHighScore() {
   action?.()
 }
 
+const pointsInputRef = ref<HTMLInputElement | null>(null)
+
+async function refocusPointsInput() {
+  await nextTick()
+  pointsInputRef.value?.focus()
+}
+
+watch(activeGame, (game) => {
+  if (game) refocusPointsInput()
+})
+
 function stashPoints() {
   if (turnPoints.value < MIN_STASH_POINTS) return
   stashedPoints.value += turnPoints.value
   turnPoints.value = 0
+  refocusPointsInput()
 }
 
 function stashThreePairs() {
   stashedPoints.value += THREE_PAIRS_POINTS
   turnPoints.value = 0
+  refocusPointsInput()
 }
 
 function stashStraight() {
   stashedPoints.value += STRAIGHT_POINTS
   turnPoints.value = 0
+  refocusPointsInput()
 }
 
 async function bank() {
@@ -83,6 +99,7 @@ async function bank() {
 
   turnPoints.value = 0
   stashedPoints.value = 0
+  refocusPointsInput()
 }
 
 async function farkle() {
@@ -109,6 +126,7 @@ async function farkle() {
   })
 
   stashedPoints.value = 0
+  refocusPointsInput()
 }
 
 async function advanceTurn(game: Game) {
@@ -176,14 +194,25 @@ async function endGame() {
           </button>
         </div>
 
-        <input
-          v-model.number="turnPoints"
-          type="number"
-          min="0"
-          step="50"
-          placeholder="Points scored this roll"
-          class="input input-bordered w-full"
-        />
+        <div class="join w-full">
+          <input
+            ref="pointsInputRef"
+            v-model.number="turnPoints"
+            type="number"
+            min="0"
+            step="50"
+            placeholder="Points scored this roll"
+            class="input input-bordered join-item grow"
+          />
+          <button
+            type="button"
+            class="btn btn-outline join-item px-3"
+            :disabled="!!turnPoints"
+            @click="turnPoints = MIN_STASH_POINTS"
+          >
+            {{ MIN_STASH_POINTS }}
+          </button>
+        </div>
         <div v-if="isNotDivisibleBy50 && turnPoints >= MIN_STASH_POINTS" class="alert alert-warning py-2">
           <Icon name="heroicons:exclamation-triangle" class="size-4 shrink-0" />
           <span>Points must be divisible by 50.</span>
