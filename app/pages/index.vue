@@ -242,7 +242,7 @@ async function endGame() {
         <dialog ref="highScoreDialogRef" class="modal" @close="pendingHighScoreAction = null">
           <div class="modal-box">
             <h3 class="font-bold text-lg mb-4">Confirm high score</h3>
-            <p>You entered <strong>{{ turnPoints }}</strong> points this roll, which is above {{ HIGH_SCORE_CONFIRM_THRESHOLD }}. Did you actually score that many?</p>
+            <p>You entered <strong>{{ turnPoints }}</strong> points this roll. Did you actually score that many?</p>
             <div class="modal-action">
               <button class="btn btn-ghost gap-2" @click="highScoreDialogRef?.close()">
                 <Icon name="heroicons:x-mark" class="size-4" /> Cancel
