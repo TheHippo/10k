@@ -4,7 +4,7 @@ import { db } from '~/db'
 import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS, HIGH_SCORE_CONFIRM_THRESHOLD } from '~/constants/game'
 import { mountWithStubs } from '../setup/mount'
 import { seedActiveGame, seedTurns } from '../setup/fixtures'
-import { click, clickButtonWithText, waitFor } from '../setup/dom'
+import { clickButton, dialogTitled, getButton, waitFor } from '../setup/dom'
 
 async function waitForGameReady(wrapper: Awaited<ReturnType<typeof mountWithStubs>>, playerNames: string[]) {
   await waitFor(() => {
@@ -55,8 +55,8 @@ describe('pages/index.vue turn engine', () => {
     await wrapper.get('input[type="number"]').setValue(MIN_STASH_POINTS - 50)
 
     expect(wrapper.text()).toContain(`Need at least ${MIN_STASH_POINTS} points`)
-    expect(wrapper.get('button.btn-info').attributes('disabled')).toBeDefined()
-    expect(wrapper.get('button.btn-success').attributes('disabled')).toBeDefined()
+    expect(getButton(wrapper, 'Stash').attributes('disabled')).toBeDefined()
+    expect(getButton(wrapper, 'Bank').attributes('disabled')).toBeDefined()
   })
 
   it('warns and disables actions when points are not divisible by 50', async () => {
@@ -65,8 +65,8 @@ describe('pages/index.vue turn engine', () => {
     await wrapper.get('input[type="number"]').setValue(MIN_STASH_POINTS + 25)
 
     expect(wrapper.text()).toContain('Points must be divisible by 50.')
-    expect(wrapper.get('button.btn-info').attributes('disabled')).toBeDefined()
-    expect(wrapper.get('button.btn-success').attributes('disabled')).toBeDefined()
+    expect(getButton(wrapper, 'Stash').attributes('disabled')).toBeDefined()
+    expect(getButton(wrapper, 'Bank').attributes('disabled')).toBeDefined()
   })
 
   it('focuses the points input once a game is in progress', async () => {
@@ -84,7 +84,7 @@ describe('pages/index.vue turn engine', () => {
     const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
     const focusSpy = vi.spyOn(HTMLInputElement.prototype, 'focus')
 
-    await click(wrapper, 'button.btn-error')
+    await clickButton(wrapper, 'Farkle')
 
     await waitFor(() => {
       expect(focusSpy).toHaveBeenCalled()
@@ -95,17 +95,17 @@ describe('pages/index.vue turn engine', () => {
   it('the quick-fill button sets turnPoints to the minimum stash points', async () => {
     const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
-    await clickButtonWithText(wrapper, String(MIN_STASH_POINTS))
+    await clickButton(wrapper, String(MIN_STASH_POINTS))
 
     expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe(String(MIN_STASH_POINTS))
-    expect(wrapper.get('button.btn-info').attributes('disabled')).toBeUndefined()
-    expect(wrapper.get('button.btn-success').attributes('disabled')).toBeUndefined()
+    expect(getButton(wrapper, 'Stash').attributes('disabled')).toBeUndefined()
+    expect(getButton(wrapper, 'Bank').attributes('disabled')).toBeUndefined()
   })
 
   it('disables the quick-fill button once the input has a value', async () => {
     const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
-    const quickFillButton = wrapper.get(`button[type="button"].btn-outline`)
+    const quickFillButton = getButton(wrapper, String(MIN_STASH_POINTS))
     expect(quickFillButton.attributes('disabled')).toBeUndefined()
 
     await wrapper.get('input[type="number"]').setValue(50)
@@ -121,7 +121,7 @@ describe('pages/index.vue turn engine', () => {
     const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
     await wrapper.get('input[type="number"]').setValue(MIN_STASH_POINTS)
-    await click(wrapper, 'button.btn-info')
+    await clickButton(wrapper, 'Stash')
 
     expect(wrapper.text()).toContain(`Stashed: ${MIN_STASH_POINTS} pts`)
     expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('0')
@@ -131,9 +131,9 @@ describe('pages/index.vue turn engine', () => {
     const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
     await wrapper.get('input[type="number"]').setValue(350)
-    await click(wrapper, 'button.btn-info')
+    await clickButton(wrapper, 'Stash')
     await wrapper.get('input[type="number"]').setValue(400)
-    await click(wrapper, 'button.btn-info')
+    await clickButton(wrapper, 'Stash')
 
     expect(wrapper.text()).toContain('Stashed: 750 pts')
   })
@@ -142,7 +142,7 @@ describe('pages/index.vue turn engine', () => {
     const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
     await wrapper.get('input[type="number"]').setValue(999)
-    await clickButtonWithText(wrapper, 'Three Pairs')
+    await clickButton(wrapper, 'Three Pairs')
 
     expect(wrapper.text()).toContain(`Stashed: ${THREE_PAIRS_POINTS} pts`)
     expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('0')
@@ -152,7 +152,7 @@ describe('pages/index.vue turn engine', () => {
     const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
     await wrapper.get('input[type="number"]').setValue(999)
-    await clickButtonWithText(wrapper, 'Straight 1')
+    await clickButton(wrapper, 'Straight 1')
 
     expect(wrapper.text()).toContain(`Stashed: ${STRAIGHT_POINTS} pts`)
     expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('0')
@@ -162,7 +162,7 @@ describe('pages/index.vue turn engine', () => {
     const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
     await wrapper.get('input[type="number"]').setValue(HIGH_SCORE_CONFIRM_THRESHOLD + 50)
-    await click(wrapper, 'button.btn-success')
+    await clickButton(wrapper, 'Bank')
 
     expect(wrapper.get('dialog').element.open).toBe(true)
     expect(wrapper.text()).toContain('Confirm high score')
@@ -172,7 +172,7 @@ describe('pages/index.vue turn engine', () => {
     const { game, wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
     await wrapper.get('input[type="number"]').setValue(HIGH_SCORE_CONFIRM_THRESHOLD)
-    await click(wrapper, 'button.btn-success')
+    await clickButton(wrapper, 'Bank')
 
     expect(wrapper.get('dialog').element.open).toBe(false)
     await waitFor(async () => {
@@ -185,8 +185,8 @@ describe('pages/index.vue turn engine', () => {
     const { game, wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
     await wrapper.get('input[type="number"]').setValue(HIGH_SCORE_CONFIRM_THRESHOLD + 50)
-    await click(wrapper, 'button.btn-success')
-    await clickButtonWithText(wrapper, 'Yes, that\'s correct')
+    await clickButton(wrapper, 'Bank')
+    await clickButton(wrapper, 'Yes, that\'s correct')
 
     expect(wrapper.get('dialog').element.open).toBe(false)
     await waitFor(async () => {
@@ -200,8 +200,8 @@ describe('pages/index.vue turn engine', () => {
     const { game, wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
     await wrapper.get('input[type="number"]').setValue(HIGH_SCORE_CONFIRM_THRESHOLD + 50)
-    await click(wrapper, 'button.btn-success')
-    await clickButtonWithText(wrapper, 'Cancel')
+    await clickButton(wrapper, 'Bank')
+    await clickButton(dialogTitled(wrapper, 'Confirm high score'), 'Cancel')
 
     expect(wrapper.get('dialog').element.open).toBe(false)
     expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe(String(HIGH_SCORE_CONFIRM_THRESHOLD + 50))
@@ -222,9 +222,9 @@ describe('pages/index.vue turn engine', () => {
     await waitForGameReady(wrapper, ['Alice', 'Bob'])
 
     await wrapper.get('input[type="number"]').setValue(350)
-    await click(wrapper, 'button.btn-info')
+    await clickButton(wrapper, 'Stash')
     await wrapper.get('input[type="number"]').setValue(400)
-    await click(wrapper, 'button.btn-success')
+    await clickButton(wrapper, 'Bank')
 
     await waitFor(async () => {
       const turns = await db.turns.where('gameId').equals(game.id).toArray()
@@ -253,7 +253,7 @@ describe('pages/index.vue turn engine', () => {
     const wrapper = await mountWithStubs(IndexPage)
     await waitForGameReady(wrapper, ['Alice', 'Bob'])
 
-    await click(wrapper, 'button.btn-error')
+    await clickButton(wrapper, 'Farkle')
 
     await waitFor(async () => {
       const turns = await db.turns.where('gameId').equals(game.id).toArray()
@@ -281,7 +281,7 @@ describe('pages/index.vue turn engine', () => {
     const wrapper = await mountWithStubs(IndexPage)
     await waitForGameReady(wrapper, ['Alice', 'Bob'])
 
-    await click(wrapper, 'button.btn-error')
+    await clickButton(wrapper, 'Farkle')
 
     await waitFor(async () => {
       const alice = await db.gamePlayers.get(gamePlayers[0].id)
@@ -293,7 +293,7 @@ describe('pages/index.vue turn engine', () => {
   it('advances to the next player mid-list', async () => {
     const { game, gamePlayers, wrapper } = await mountActiveGame(['Alice', 'Bob', 'Cara'])
 
-    await click(wrapper, 'button.btn-error')
+    await clickButton(wrapper, 'Farkle')
 
     await waitFor(async () => {
       const updatedGame = await db.games.get(game.id)
@@ -310,7 +310,7 @@ describe('pages/index.vue turn engine', () => {
     const wrapper = await mountWithStubs(IndexPage)
     await waitForGameReady(wrapper, ['Alice', 'Bob', 'Cara'])
 
-    await click(wrapper, 'button.btn-error')
+    await clickButton(wrapper, 'Farkle')
 
     await waitFor(async () => {
       const updatedGame = await db.games.get(players.game.id)
@@ -324,7 +324,7 @@ describe('pages/index.vue turn engine', () => {
       [{ totalScore: 8000 }, { totalScore: 12000 }, { totalScore: 5000 }],
     )
 
-    await click(wrapper, 'button.btn-neutral')
+    await clickButton(wrapper, 'End Game')
 
     await waitFor(async () => {
       const updated = await db.games.get(game.id)
@@ -340,7 +340,7 @@ describe('pages/index.vue turn engine', () => {
       [{ totalScore: 5000 }, { totalScore: 5000 }],
     )
 
-    await click(wrapper, 'button.btn-neutral')
+    await clickButton(wrapper, 'End Game')
 
     await waitFor(async () => {
       const updated = await db.games.get(game.id)
@@ -352,23 +352,22 @@ describe('pages/index.vue turn engine', () => {
     it('disables Undo when there are no turns yet', async () => {
       const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
-      const undoButton = wrapper.findAll('button').find(b => b.text().includes('Undo'))!
-      expect(undoButton.attributes('disabled')).toBeDefined()
+      expect(getButton(wrapper, 'Undo').attributes('disabled')).toBeDefined()
     })
 
     it('removes the last banked turn and restores the previous totals and current player', async () => {
       const { game, gamePlayers, wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
       await wrapper.get('input[type="number"]').setValue(400)
-      await click(wrapper, 'button.btn-success')
+      await clickButton(wrapper, 'Bank')
 
       await waitFor(async () => {
         const turns = await db.turns.where('gameId').equals(game.id).toArray()
         expect(turns).toHaveLength(1)
       })
 
-      await clickButtonWithText(wrapper, 'Undo')
-      await clickButtonWithText(wrapper, 'Yes, undo')
+      await clickButton(wrapper, 'Undo')
+      await clickButton(wrapper, 'Yes, undo')
 
       await waitFor(async () => {
         const turns = await db.turns.where('gameId').equals(game.id).toArray()
@@ -393,7 +392,7 @@ describe('pages/index.vue turn engine', () => {
       const wrapper = await mountWithStubs(IndexPage)
       await waitForGameReady(wrapper, ['Alice', 'Bob'])
 
-      await click(wrapper, 'button.btn-error')
+      await clickButton(wrapper, 'Farkle')
 
       await waitFor(async () => {
         const alice = await db.gamePlayers.get(gamePlayers[0].id)
@@ -401,8 +400,8 @@ describe('pages/index.vue turn engine', () => {
         expect(alice?.consecutiveFarkles).toBe(0)
       })
 
-      await clickButtonWithText(wrapper, 'Undo')
-      await clickButtonWithText(wrapper, 'Yes, undo')
+      await clickButton(wrapper, 'Undo')
+      await clickButton(wrapper, 'Yes, undo')
 
       await waitFor(async () => {
         const alice = await db.gamePlayers.get(gamePlayers[0].id)
@@ -417,14 +416,14 @@ describe('pages/index.vue turn engine', () => {
       const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
 
       await wrapper.get('input[type="number"]').setValue(400)
-      await click(wrapper, 'button.btn-success')
+      await clickButton(wrapper, 'Bank')
 
       await waitFor(() => {
         const bobRow = wrapper.findAll('tbody tr').find(r => r.text().includes('Bob'))
         expect(bobRow?.text()).toContain('current')
       })
 
-      await click(wrapper, 'button.btn-error')
+      await clickButton(wrapper, 'Farkle')
 
       await waitFor(() => {
         expect(wrapper.text()).toContain('Round 1')

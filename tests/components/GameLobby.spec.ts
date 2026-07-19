@@ -4,7 +4,7 @@ import NewPlayerModal from '~/components/NewPlayerModal.vue'
 import { db } from '~/db'
 import { mountWithStubs } from '../setup/mount'
 import { seedPlayers } from '../setup/fixtures'
-import { findButtonByText, selectOptionWithText, waitFor } from '../setup/dom'
+import { clickButton, getButton, selectOptionWithText, waitFor } from '../setup/dom'
 
 async function mountLobby(playerNames: string[]) {
   const players = await seedPlayers(playerNames)
@@ -25,28 +25,26 @@ describe('GameLobby', () => {
     const { wrapper } = await mountLobby(['Alice', 'Bob', 'Cara', 'Dan', 'Eve', 'Finn'])
 
     for (let i = 0; i < 5; i++) {
-      await findButtonByText(wrapper, 'Add Player').trigger('click')
+      await clickButton(wrapper, 'Add Player')
     }
 
     expect(wrapper.findAll('select')).toHaveLength(6)
-    expect(findButtonByText(wrapper, 'Add Player').attributes('disabled')).toBeDefined()
+    expect(getButton(wrapper, 'Add Player').attributes('disabled')).toBeDefined()
   })
 
   it('disables "Remove Player" at the minimum of two rows', async () => {
     const { wrapper } = await mountLobby(['Alice', 'Bob'])
-    const removeButtons = wrapper.findAll('button.btn-ghost.btn-square')
-    expect(removeButtons).toHaveLength(2)
-    for (const btn of removeButtons) {
-      expect(btn.attributes('disabled')).toBeDefined()
+    for (const slot of [1, 2]) {
+      expect(getButton(wrapper, `Remove player slot ${slot}`).attributes('disabled')).toBeDefined()
     }
   })
 
   it('removes a row when above the minimum', async () => {
     const { wrapper } = await mountLobby(['Alice', 'Bob', 'Cara'])
-    await findButtonByText(wrapper, 'Add Player').trigger('click')
+    await clickButton(wrapper, 'Add Player')
     expect(wrapper.findAll('select')).toHaveLength(3)
 
-    await wrapper.findAll('button.btn-ghost.btn-square')[2]!.trigger('click')
+    await clickButton(wrapper, 'Remove player slot 3')
     expect(wrapper.findAll('select')).toHaveLength(2)
   })
 
@@ -63,13 +61,13 @@ describe('GameLobby', () => {
 
   it('disables Start Game while any row is unselected', async () => {
     const { players, wrapper } = await mountLobby(['Alice', 'Bob'])
-    expect(findButtonByText(wrapper, 'Start Game').attributes('disabled')).toBeDefined()
+    expect(getButton(wrapper, 'Start Game').attributes('disabled')).toBeDefined()
 
     const selects = wrapper.findAll('select')
     await selectOptionWithText(selects[0]!, players[0]!.name)
     await selectOptionWithText(selects[1]!, players[1]!.name)
 
-    expect(findButtonByText(wrapper, 'Start Game').attributes('disabled')).toBeUndefined()
+    expect(getButton(wrapper, 'Start Game').attributes('disabled')).toBeUndefined()
   })
 
   it('startGame creates one Game and N GamePlayer rows with correct turnOrder', async () => {
@@ -78,7 +76,7 @@ describe('GameLobby', () => {
     await selectOptionWithText(selects[0]!, players[1]!.name)
     await selectOptionWithText(selects[1]!, players[2]!.name)
 
-    await findButtonByText(wrapper, 'Start Game').trigger('click')
+    await clickButton(wrapper, 'Start Game')
 
     await waitFor(async () => {
       const games = await db.games.where('status').equals('active').toArray()
@@ -106,7 +104,7 @@ describe('GameLobby', () => {
 
     const modal = wrapper.findComponent(NewPlayerModal)
     await modal.get('input[type="text"]').setValue('Zoe')
-    await modal.get('button.btn-primary').trigger('click')
+    await clickButton(modal, 'Create')
 
     await waitFor(async () => {
       const zoe = await db.players.where('name').equals('Zoe').first()

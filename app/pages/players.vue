@@ -41,7 +41,7 @@ async function removePlayer() {
     <ul class="space-y-2">
       <li v-for="p in players" :key="p.id" class="flex justify-between items-center">
         <span>{{ p.name }}</span>
-        <button class="btn btn-ghost btn-sm btn-square text-error" @click="askRemove(p)">
+        <button class="btn btn-ghost btn-sm btn-square text-error" :aria-label="`Remove ${p.name}`" @click="askRemove(p)">
           <Icon name="heroicons:x-mark" class="size-4" />
         </button>
       </li>

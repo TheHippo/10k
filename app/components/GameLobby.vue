@@ -65,6 +65,7 @@ function onPlayerCreated(id: number) {
         </select>
         <button
           class="btn btn-ghost btn-square"
+          :aria-label="`Remove player slot ${i + 1}`"
           :disabled="selectedPlayerIds.length <= 2"
           @click="removePlayer(i)"
         ><Icon name="heroicons:x-mark" class="size-4" /></button>

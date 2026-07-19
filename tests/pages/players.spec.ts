@@ -3,7 +3,7 @@ import PlayersPage from '~/pages/players.vue'
 import { db } from '~/db'
 import { mountWithStubs } from '../setup/mount'
 import { seedPlayers } from '../setup/fixtures'
-import { waitFor } from '../setup/dom'
+import { clickButton, dialogTitled, waitFor } from '../setup/dom'
 
 describe('pages/players.vue', () => {
   it('shows an empty state when there are no players', async () => {
@@ -29,11 +29,11 @@ describe('pages/players.vue', () => {
     const wrapper = await mountWithStubs(PlayersPage)
     await waitFor(() => expect(wrapper.findAll('li')).toHaveLength(1))
 
-    await wrapper.get('button.btn-ghost.btn-square.text-error').trigger('click')
+    await clickButton(wrapper, 'Remove Alice')
     expect(wrapper.text()).toContain('Remove')
     expect(wrapper.text()).toContain('Alice')
 
-    await wrapper.get('button.btn-error.gap-2').trigger('click')
+    await clickButton(dialogTitled(wrapper, 'Remove player?'), 'Remove')
 
     await waitFor(async () => {
       const alice = await db.players.where('name').equals('Alice').first()
