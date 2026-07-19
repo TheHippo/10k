@@ -2,3 +2,5 @@ export const MIN_STASH_POINTS = 350
 export const THREE_PAIRS_POINTS = 750
 export const STRAIGHT_POINTS = 1500
 export const HIGH_SCORE_CONFIRM_THRESHOLD = 2000
+export const FARKLE_PENALTY = -1000
+export const MAX_CONSECUTIVE_FARKLES = 3

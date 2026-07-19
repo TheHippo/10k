@@ -3,7 +3,7 @@ import IndexPage from '~/pages/index.vue'
 import { db } from '~/db'
 import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS, HIGH_SCORE_CONFIRM_THRESHOLD } from '~/constants/game'
 import { mountWithStubs } from '../setup/mount'
-import { seedActiveGame } from '../setup/fixtures'
+import { seedActiveGame, seedTurns } from '../setup/fixtures'
 import { click, clickButtonWithText, waitFor } from '../setup/dom'
 
 async function waitForGameReady(wrapper: Awaited<ReturnType<typeof mountWithStubs>>, playerNames: string[]) {
@@ -210,10 +210,16 @@ describe('pages/index.vue turn engine', () => {
   })
 
   it('bank commits stashed+turn points, resets the farkle streak, and advances the turn', async () => {
-    const { game, gamePlayers, wrapper } = await mountActiveGame(
-      ['Alice', 'Bob'],
-      [{ consecutiveFarkles: 2 }],
-    )
+    const { game, gamePlayers } = await seedActiveGame(['Alice', 'Bob'])
+    // Give Alice a pre-existing 2-farkle streak (interleaved with Bob's turns), current player back to Alice.
+    await seedTurns(game.id, gamePlayers, [
+      { gamePlayerIndex: 0, farkled: true },
+      { gamePlayerIndex: 1, points: 100 },
+      { gamePlayerIndex: 0, farkled: true },
+      { gamePlayerIndex: 1, points: 100 },
+    ])
+    const wrapper = await mountWithStubs(IndexPage)
+    await waitForGameReady(wrapper, ['Alice', 'Bob'])
 
     await wrapper.get('input[type="number"]').setValue(350)
     await click(wrapper, 'button.btn-info')
@@ -222,8 +228,9 @@ describe('pages/index.vue turn engine', () => {
 
     await waitFor(async () => {
       const turns = await db.turns.where('gameId').equals(game.id).toArray()
-      expect(turns).toHaveLength(1)
-      expect(turns[0]).toMatchObject({ pointsBanked: 750, farkled: false, turnNumber: 1 })
+      expect(turns).toHaveLength(5)
+      const lastTurn = turns.find(t => t.turnNumber === 5)
+      expect(lastTurn).toMatchObject({ pointsBanked: 750, farkled: false, turnNumber: 5 })
 
       const alice = await db.gamePlayers.get(gamePlayers[0].id)
       expect(alice?.totalScore).toBe(750)
@@ -235,17 +242,24 @@ describe('pages/index.vue turn engine', () => {
   })
 
   it('farkle records a zero-point turn and increments the streak without penalty', async () => {
-    const { game, gamePlayers, wrapper } = await mountActiveGame(
-      ['Alice', 'Bob'],
-      [{ consecutiveFarkles: 1, totalScore: 500 }],
-    )
+    const { game, gamePlayers } = await seedActiveGame(['Alice', 'Bob'])
+    // Alice already banked 500 and has farkled once since, current player back to Alice.
+    await seedTurns(game.id, gamePlayers, [
+      { gamePlayerIndex: 0, points: 500 },
+      { gamePlayerIndex: 1, points: 100 },
+      { gamePlayerIndex: 0, farkled: true },
+      { gamePlayerIndex: 1, points: 100 },
+    ])
+    const wrapper = await mountWithStubs(IndexPage)
+    await waitForGameReady(wrapper, ['Alice', 'Bob'])
 
     await click(wrapper, 'button.btn-error')
 
     await waitFor(async () => {
       const turns = await db.turns.where('gameId').equals(game.id).toArray()
-      expect(turns).toHaveLength(1)
-      expect(turns[0]).toMatchObject({ pointsBanked: 0, farkled: true, turnNumber: 1 })
+      expect(turns).toHaveLength(5)
+      const lastTurn = turns.find(t => t.turnNumber === 5)
+      expect(lastTurn).toMatchObject({ pointsBanked: 0, farkled: true, turnNumber: 5 })
 
       const alice = await db.gamePlayers.get(gamePlayers[0].id)
       expect(alice?.consecutiveFarkles).toBe(2)
@@ -254,10 +268,18 @@ describe('pages/index.vue turn engine', () => {
   })
 
   it('the third consecutive farkle applies a -1000 penalty and resets the streak', async () => {
-    const { gamePlayers, wrapper } = await mountActiveGame(
-      ['Alice', 'Bob'],
-      [{ consecutiveFarkles: 2, totalScore: 500 }],
-    )
+    const { game, gamePlayers } = await seedActiveGame(['Alice', 'Bob'])
+    // Alice banked 500, then farkled twice, current player back to Alice.
+    await seedTurns(game.id, gamePlayers, [
+      { gamePlayerIndex: 0, points: 500 },
+      { gamePlayerIndex: 1, points: 100 },
+      { gamePlayerIndex: 0, farkled: true },
+      { gamePlayerIndex: 1, points: 100 },
+      { gamePlayerIndex: 0, farkled: true },
+      { gamePlayerIndex: 1, points: 100 },
+    ])
+    const wrapper = await mountWithStubs(IndexPage)
+    await waitForGameReady(wrapper, ['Alice', 'Bob'])
 
     await click(wrapper, 'button.btn-error')
 
@@ -281,7 +303,10 @@ describe('pages/index.vue turn engine', () => {
 
   it('wraps the turn from the last player back to the first', async () => {
     const players = await seedActiveGame(['Alice', 'Bob', 'Cara'])
-    await db.games.update(players.game.id, { currentGamePlayerId: players.gamePlayers[2].id })
+    await seedTurns(players.game.id, players.gamePlayers, [
+      { gamePlayerIndex: 0, points: 100 },
+      { gamePlayerIndex: 1, points: 100 },
+    ])
     const wrapper = await mountWithStubs(IndexPage)
     await waitForGameReady(wrapper, ['Alice', 'Bob', 'Cara'])
 
@@ -320,6 +345,92 @@ describe('pages/index.vue turn engine', () => {
     await waitFor(async () => {
       const updated = await db.games.get(game.id)
       expect(updated?.winnerGamePlayerId).toBe(gamePlayers[0].id)
+    })
+  })
+
+  describe('undo', () => {
+    it('disables Undo when there are no turns yet', async () => {
+      const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+      const undoButton = wrapper.findAll('button').find(b => b.text().includes('Undo'))!
+      expect(undoButton.attributes('disabled')).toBeDefined()
+    })
+
+    it('removes the last banked turn and restores the previous totals and current player', async () => {
+      const { game, gamePlayers, wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+      await wrapper.get('input[type="number"]').setValue(400)
+      await click(wrapper, 'button.btn-success')
+
+      await waitFor(async () => {
+        const turns = await db.turns.where('gameId').equals(game.id).toArray()
+        expect(turns).toHaveLength(1)
+      })
+
+      await clickButtonWithText(wrapper, 'Undo')
+      await clickButtonWithText(wrapper, 'Yes, undo')
+
+      await waitFor(async () => {
+        const turns = await db.turns.where('gameId').equals(game.id).toArray()
+        expect(turns).toHaveLength(0)
+
+        const alice = await db.gamePlayers.get(gamePlayers[0].id)
+        expect(alice?.totalScore).toBe(0)
+
+        const updatedGame = await db.games.get(game.id)
+        expect(updatedGame?.currentGamePlayerId).toBe(gamePlayers[0].id)
+      })
+    })
+
+    it('rolls back a penalty-triggering farkle, restoring the streak and points', async () => {
+      const { game, gamePlayers } = await seedActiveGame(['Alice', 'Bob'])
+      await seedTurns(game.id, gamePlayers, [
+        { gamePlayerIndex: 0, farkled: true },
+        { gamePlayerIndex: 1, points: 100 },
+        { gamePlayerIndex: 0, farkled: true },
+        { gamePlayerIndex: 1, points: 100 },
+      ])
+      const wrapper = await mountWithStubs(IndexPage)
+      await waitForGameReady(wrapper, ['Alice', 'Bob'])
+
+      await click(wrapper, 'button.btn-error')
+
+      await waitFor(async () => {
+        const alice = await db.gamePlayers.get(gamePlayers[0].id)
+        expect(alice?.totalScore).toBe(-1000)
+        expect(alice?.consecutiveFarkles).toBe(0)
+      })
+
+      await clickButtonWithText(wrapper, 'Undo')
+      await clickButtonWithText(wrapper, 'Yes, undo')
+
+      await waitFor(async () => {
+        const alice = await db.gamePlayers.get(gamePlayers[0].id)
+        expect(alice?.totalScore).toBe(0)
+        expect(alice?.consecutiveFarkles).toBe(2)
+      })
+    })
+  })
+
+  describe('round breakdown', () => {
+    it('renders each played turn grouped by round', async () => {
+      const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+      await wrapper.get('input[type="number"]').setValue(400)
+      await click(wrapper, 'button.btn-success')
+
+      await waitFor(() => {
+        const bobRow = wrapper.findAll('tbody tr').find(r => r.text().includes('Bob'))
+        expect(bobRow?.text()).toContain('current')
+      })
+
+      await click(wrapper, 'button.btn-error')
+
+      await waitFor(() => {
+        expect(wrapper.text()).toContain('Round 1')
+        expect(wrapper.text()).toContain('+400')
+        expect(wrapper.text()).toContain('FARKLE')
+      })
     })
   })
 })
