@@ -12,6 +12,9 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   pwa: {
+    client: {
+      periodicSyncForUpdates: 60 * 60,
+    },
     manifest: {
       name: '10,000',
       short_name: '10k',

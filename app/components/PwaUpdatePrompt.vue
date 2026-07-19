@@ -4,6 +4,20 @@ const pwa = usePWA()
 function reload() {
   pwa?.updateServiceWorker(true)
 }
+
+function checkForUpdate() {
+  if (document.visibilityState === 'visible') {
+    pwa?.getSWRegistration()?.update()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', checkForUpdate)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', checkForUpdate)
+})
 </script>
 
 <template>
