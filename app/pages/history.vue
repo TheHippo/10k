@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { db } from '~/db'
-import type { Game, GamePlayer, GamePlayerWithName } from '~/interfaces'
+import { deriveGameState } from '~/game/engine'
+import type { Game, GamePlayerWithName, RoundBreakdown } from '~/interfaces'
 
 interface FinishedGameSummary {
   game: Game
   players: GamePlayerWithName[]
+  rounds: RoundBreakdown[]
   winnerName: string
   winnerScore: number
 }
@@ -17,13 +19,21 @@ const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
   games.sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
   return Promise.all(games.map(async (game) => {
     const gps = await db.gamePlayers.where('gameId').equals(game.id).sortBy('turnOrder')
+    const turns = await db.turns.where('gameId').equals(game.id).sortBy('turnNumber')
     const players = await Promise.all(gps.map(async (gp) => {
       const player = await db.players.get(gp.playerId)
       return { ...gp, playerName: player?.name ?? 'Unknown' }
     }))
     const playersSorted = [...players].sort((a, b) => b.totalScore - a.totalScore)
     const winner = players.find(p => p.id === game.winnerGamePlayerId)
-    return { game, players: playersSorted, winnerName: winner?.playerName ?? 'Unknown', winnerScore: winner?.totalScore ?? 0 }
+    const { rounds } = deriveGameState(gps, turns)
+    return {
+      game,
+      players: playersSorted,
+      rounds,
+      winnerName: winner?.playerName ?? 'Unknown',
+      winnerScore: winner?.totalScore ?? 0,
+    }
   }))
 }, [])
 
@@ -64,6 +74,13 @@ const displayedGames = computed(() =>
         >
           <span>{{ p.playerName }}</span>
           <span class="font-mono">{{ p.totalScore.toLocaleString() }}</span>
+        </div>
+      </div>
+      <div class="collapse collapse-arrow bg-base-100 mt-2">
+        <input type="checkbox" />
+        <div class="collapse-title text-sm font-medium py-2 min-h-0">Round breakdown</div>
+        <div class="collapse-content">
+          <RoundBreakdown :rounds="summary.rounds" :players="summary.players" />
         </div>
       </div>
     </AppCard>

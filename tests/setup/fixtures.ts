@@ -1,5 +1,6 @@
 import { db } from '~/db'
 import type { Player, Game, GamePlayer } from '~/db'
+import { recordBank, recordFarkle } from '~/game/engine'
 
 export async function seedPlayers(names: string[]): Promise<Player[]> {
   const players: Player[] = []
@@ -51,6 +52,21 @@ export async function seedActiveGame(
   const game = (await db.games.get(gameId)) as Game
 
   return { game, players, gamePlayers }
+}
+
+export interface TurnSeed {
+  gamePlayerIndex: number
+  points?: number
+  farkled?: boolean
+}
+
+/** Replays turns through the real engine so totalScore/consecutiveFarkles/currentGamePlayerId land where a real game would leave them. */
+export async function seedTurns(gameId: number, gamePlayers: GamePlayer[], seeds: TurnSeed[]) {
+  for (const seed of seeds) {
+    const gp = gamePlayers[seed.gamePlayerIndex]!
+    if (seed.farkled) await recordFarkle(gameId, gp.id)
+    else await recordBank(gameId, gp.id, seed.points ?? 0)
+  }
 }
 
 export async function seedFinishedGame(

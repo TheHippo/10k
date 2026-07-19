@@ -35,3 +35,31 @@ export interface Turn {
 export interface GamePlayerWithName extends GamePlayer {
   playerName: string
 }
+
+export interface PlayerStanding {
+  gamePlayerId: number
+  totalScore: number
+  consecutiveFarkles: number
+}
+
+export interface TurnBreakdown {
+  turnNumber: number
+  round: number
+  gamePlayerId: number
+  farkled: boolean
+  pointsBanked: number
+  penalty: number
+  netPoints: number
+  runningTotal: number
+}
+
+export interface RoundBreakdown {
+  round: number
+  turns: TurnBreakdown[]
+}
+
+export interface DerivedGameState {
+  standings: PlayerStanding[]
+  rounds: RoundBreakdown[]
+  currentGamePlayerId: number
+}

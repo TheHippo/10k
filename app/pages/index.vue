@@ -2,7 +2,8 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { db } from '~/db'
 import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS, HIGH_SCORE_CONFIRM_THRESHOLD } from '~/constants/game'
-import type { Game, GamePlayer, GamePlayerWithName, Turn } from '~/interfaces'
+import { deriveGameState, recordBank, recordFarkle, undoLastTurn } from '~/game/engine'
+import type { Game, GamePlayerWithName, Turn } from '~/interfaces'
 
 const activeGame = useLiveQuery<Game | undefined>(
   () => db.games.where('status').equals('active').first(),
@@ -18,6 +19,23 @@ const activeGamePlayers = useLiveQuery<GamePlayerWithName[]>(async () => {
     return { ...gp, playerName: player?.name ?? 'Unknown' }
   }))
 }, [])
+
+const activeTurns = useLiveQuery<Turn[]>(async () => {
+  const game = await db.games.where('status').equals('active').first()
+  if (!game) return []
+  return db.turns.where('gameId').equals(game.id).sortBy('turnNumber')
+}, [])
+
+const derivedRounds = computed(() => deriveGameState(activeGamePlayers.value, activeTurns.value).rounds)
+
+const lastTurnBreakdown = computed(() => {
+  const lastRound = derivedRounds.value[derivedRounds.value.length - 1]
+  return lastRound ? lastRound.turns[lastRound.turns.length - 1]! : null
+})
+
+const lastTurnPlayerName = computed(() =>
+  activeGamePlayers.value.find(p => p.id === lastTurnBreakdown.value?.gamePlayerId)?.playerName ?? '',
+)
 
 useWakeLock(computed(() => !!activeGame.value))
 
@@ -43,6 +61,19 @@ function confirmHighScore() {
   const action = pendingHighScoreAction
   highScoreDialogRef.value?.close()
   action?.()
+}
+
+const undoDialogRef = ref<HTMLDialogElement | null>(null)
+
+function openUndoDialog() {
+  undoDialogRef.value?.showModal()
+}
+
+async function confirmUndo() {
+  if (!activeGame.value) return
+  undoDialogRef.value?.close()
+  await undoLastTurn(activeGame.value.id)
+  refocusPointsInput()
 }
 
 const pointsInputRef = ref<HTMLInputElement | null>(null)
@@ -82,20 +113,7 @@ async function bank() {
   if (!gp) return
 
   const total = stashedPoints.value + turnPoints.value
-  const turnCount = await db.turns.where('gameId').equals(game.id).count()
-
-  await db.transaction('rw', db.turns, db.gamePlayers, db.games, async () => {
-    await db.turns.add({
-      gameId: game.id, gamePlayerId: gp.id,
-      turnNumber: turnCount + 1, pointsBanked: total,
-      farkled: false, createdAt: new Date(),
-    } as Turn)
-    await db.gamePlayers.update(gp.id, {
-      totalScore: gp.totalScore + total,
-      consecutiveFarkles: 0,
-    })
-    await advanceTurn(game)
-  })
+  await recordBank(game.id, gp.id, total)
 
   turnPoints.value = 0
   stashedPoints.value = 0
@@ -108,32 +126,10 @@ async function farkle() {
   const gp = activeGamePlayers.value.find(p => p.id === game.currentGamePlayerId)
   if (!gp) return
 
-  const turnCount = await db.turns.where('gameId').equals(game.id).count()
-  const newFarkles = gp.consecutiveFarkles + 1
-  const penalty = newFarkles >= 3 ? -1000 : 0
-
-  await db.transaction('rw', db.turns, db.gamePlayers, db.games, async () => {
-    await db.turns.add({
-      gameId: game.id, gamePlayerId: gp.id,
-      turnNumber: turnCount + 1, pointsBanked: 0,
-      farkled: true, createdAt: new Date(),
-    } as Turn)
-    await db.gamePlayers.update(gp.id, {
-      totalScore: gp.totalScore + penalty,
-      consecutiveFarkles: newFarkles >= 3 ? 0 : newFarkles,
-    })
-    await advanceTurn(game)
-  })
+  await recordFarkle(game.id, gp.id)
 
   stashedPoints.value = 0
   refocusPointsInput()
-}
-
-async function advanceTurn(game: Game) {
-  const players = await db.gamePlayers.where('gameId').equals(game.id).sortBy('turnOrder')
-  const idx = players.findIndex(p => p.id === game.currentGamePlayerId)
-  const next = players[(idx + 1) % players.length]
-  if (next) await db.games.update(game.id, { currentGamePlayerId: next.id })
 }
 
 async function endGame() {
@@ -233,9 +229,20 @@ async function endGame() {
         </div>
 
         <div class="card-actions justify-end mt-2">
+          <button class="btn btn-outline btn-sm gap-2" :disabled="activeTurns.length === 0" @click="openUndoDialog">
+            <Icon name="heroicons:arrow-uturn-left" class="size-4" /> Undo
+          </button>
           <button class="btn btn-neutral btn-sm gap-2" @click="endGame">
             <Icon name="heroicons:flag" class="size-4" /> End Game
           </button>
+        </div>
+
+        <div class="collapse collapse-arrow bg-base-100 mt-2">
+          <input type="checkbox" />
+          <div class="collapse-title text-sm font-medium py-2 min-h-0">Round breakdown</div>
+          <div class="collapse-content">
+            <RoundBreakdown :rounds="derivedRounds" :players="activeGamePlayers" />
+          </div>
         </div>
 
         <dialog ref="highScoreDialogRef" class="modal" @close="pendingHighScoreAction = null">
@@ -248,6 +255,25 @@ async function endGame() {
               </button>
               <button class="btn btn-primary gap-2" @click="confirmHighScore">
                 <Icon name="heroicons:check" class="size-4" /> Yes, that's correct
+              </button>
+            </div>
+          </div>
+          <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
+
+        <dialog ref="undoDialogRef" class="modal">
+          <div class="modal-box">
+            <h3 class="font-bold text-lg mb-4">Undo last turn</h3>
+            <p v-if="lastTurnBreakdown">
+              Undo <strong>{{ lastTurnPlayerName }}</strong>'s Round {{ lastTurnBreakdown.round }} turn
+              (<template v-if="lastTurnBreakdown.farkled">Farkle<template v-if="lastTurnBreakdown.penalty !== 0"> · {{ lastTurnBreakdown.penalty }} pts</template></template><template v-else>+{{ lastTurnBreakdown.pointsBanked }} pts</template>)?
+            </p>
+            <div class="modal-action">
+              <button class="btn btn-ghost gap-2" @click="undoDialogRef?.close()">
+                <Icon name="heroicons:x-mark" class="size-4" /> Cancel
+              </button>
+              <button class="btn btn-primary gap-2" @click="confirmUndo">
+                <Icon name="heroicons:arrow-uturn-left" class="size-4" /> Yes, undo
               </button>
             </div>
           </div>
