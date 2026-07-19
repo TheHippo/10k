@@ -14,6 +14,7 @@ export default defineNuxtConfig({
   pwa: {
     client: {
       periodicSyncForUpdates: 60 * 60,
+      installPrompt: true,
     },
     manifest: {
       name: '10,000',
