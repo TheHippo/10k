@@ -5,7 +5,7 @@ defineProps<{ icon: string }>()
 <template>
   <div class="toast toast-bottom toast-center z-30">
     <div class="alert alert-info py-2">
-      <Icon :name="icon" class="size-4 shrink-0" />
+      <Icon :name="icon" />
       <span><slot /></span>
       <slot name="actions" />
     </div>

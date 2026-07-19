@@ -34,12 +34,9 @@ defineExpose({ open })
       class="input w-full"
       @keyup.enter="createPlayer"
     />
-    <template #actions="{ close }">
-      <button class="btn btn-ghost gap-2" @click="close">
-        <Icon name="heroicons:x-mark" class="size-4" /> Cancel
-      </button>
+    <template #actions>
       <button class="btn btn-primary gap-2" :disabled="!newPlayerName.trim()" @click="createPlayer">
-        <Icon name="heroicons:check" class="size-4" /> Create
+        <Icon name="heroicons:check" /> Create
       </button>
     </template>
   </AppModal>

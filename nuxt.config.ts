@@ -11,6 +11,13 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/main.css'],
 
+  // Was repeated as class="size-4" on 29 of the 30 icon usages. 1rem === size-4.
+  // shrink-0 keeps icons from being squeezed by long text in flex rows (alerts, toasts).
+  icon: {
+    size: '1rem',
+    class: 'shrink-0',
+  },
+
   pwa: {
     client: {
       periodicSyncForUpdates: 60 * 60,

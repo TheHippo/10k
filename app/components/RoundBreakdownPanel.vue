@@ -10,7 +10,7 @@ defineProps<{
 
 <template>
   <div class="collapse collapse-arrow bg-base-100 mt-2">
-    <input type="checkbox" />
+    <input type="checkbox" aria-label="Toggle round breakdown" />
     <div class="collapse-title text-sm font-medium py-2 min-h-0">Round breakdown</div>
     <div class="collapse-content">
       <RoundBreakdown :rounds="rounds" :players="players" />

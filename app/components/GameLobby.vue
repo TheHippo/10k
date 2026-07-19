@@ -50,7 +50,7 @@ function onPlayerCreated(id: number) {
           :aria-label="`Remove player slot ${i + 1}`"
           :disabled="selectedPlayerIds.length <= MIN_PLAYERS"
           @click="removePlayer(i)"
-        ><Icon name="heroicons:x-mark" class="size-4" /></button>
+        ><Icon name="heroicons:x-mark" /></button>
       </div>
     </div>
 
@@ -60,16 +60,16 @@ function onPlayerCreated(id: number) {
           class="btn btn-neutral btn-sm gap-2 flex-1 sm:flex-none"
           :disabled="selectedPlayerIds.length >= MAX_PLAYERS"
           @click="addPlayer"
-        ><Icon name="heroicons:user-plus" class="size-4" /> Add Player</button>
+        ><Icon name="heroicons:user-plus" /> Add Player</button>
         <button class="btn btn-neutral btn-sm gap-2 flex-1 sm:flex-none" @click="newPlayerModal?.open()">
-          <Icon name="heroicons:user-plus" class="size-4" /> New Player
+          <Icon name="heroicons:user-plus" /> New Player
         </button>
       </div>
       <button
         class="btn btn-primary btn-sm gap-2 w-full sm:w-auto"
         :disabled="selectedPlayerIds.some(id => id === null)"
         @click="startGame"
-      ><Icon name="heroicons:play" class="size-4" /> Start Game</button>
+      ><Icon name="heroicons:play" /> Start Game</button>
     </div>
   </AppCard>
 

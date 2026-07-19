@@ -148,10 +148,10 @@ async function finishGame() {
 
       <div class="flex gap-2">
         <button class="btn btn-outline btn-sm flex-1 gap-2" @click="stash(THREE_PAIRS_POINTS)">
-          <Icon name="heroicons:squares-2x2" class="size-4" /> Three Pairs ({{ formatDelta(THREE_PAIRS_POINTS) }})
+          <Icon name="heroicons:squares-2x2" /> Three Pairs ({{ formatDelta(THREE_PAIRS_POINTS) }})
         </button>
         <button class="btn btn-outline btn-sm flex-1 gap-2" @click="stash(STRAIGHT_POINTS)">
-          <Icon name="heroicons:bars-4" class="size-4" /> Straight 1–6 ({{ formatDelta(STRAIGHT_POINTS) }})
+          <Icon name="heroicons:bars-4" /> Straight 1–6 ({{ formatDelta(STRAIGHT_POINTS) }})
         </button>
       </div>
 
@@ -177,32 +177,32 @@ async function finishGame() {
       </div>
 
       <div v-if="isNotDivisibleBy50 && turnPoints >= MIN_STASH_POINTS" class="alert alert-warning py-2">
-        <Icon name="heroicons:exclamation-triangle" class="size-4 shrink-0" />
+        <Icon name="heroicons:exclamation-triangle" />
         <span>Points must be divisible by 50.</span>
       </div>
       <div v-if="turnPoints > 0 && turnPoints < MIN_STASH_POINTS" class="alert alert-warning py-2">
-        <Icon name="heroicons:exclamation-triangle" class="size-4 shrink-0" />
+        <Icon name="heroicons:exclamation-triangle" />
         <span>Need at least {{ MIN_STASH_POINTS }} points this roll to bank or stash.<span v-if="stashedPoints > 0"> Rolling under {{ MIN_STASH_POINTS }} loses your {{ formatScore(stashedPoints) }} stashed points too.</span></span>
       </div>
 
       <div class="flex gap-2">
         <button class="btn btn-info flex-1 gap-2" :disabled="!canScore" @click="withHighScoreConfirm(() => stash())">
-          <Icon name="heroicons:archive-box-arrow-down" class="size-4" /> Stash
+          <Icon name="heroicons:archive-box-arrow-down" /> Stash
         </button>
         <button class="btn btn-success flex-1 gap-2" :disabled="!canScore" @click="withHighScoreConfirm(bank)">
-          <Icon name="heroicons:banknotes" class="size-4" /> Bank
+          <Icon name="heroicons:banknotes" /> Bank
         </button>
         <button class="btn btn-warning flex-1 gap-2" @click="farkle">
-          <Icon name="heroicons:fire" class="size-4" /> Farkle
+          <Icon name="heroicons:fire" /> Farkle
         </button>
       </div>
 
       <div class="card-actions justify-end mt-4">
         <button class="btn btn-outline btn-sm gap-2" :disabled="activeTurns.length === 0" @click="undoModal?.open()">
-          <Icon name="heroicons:arrow-uturn-left" class="size-4" /> Undo
+          <Icon name="heroicons:arrow-uturn-left" /> Undo
         </button>
         <button class="btn btn-neutral btn-sm gap-2" @click="finishGame">
-          <Icon name="heroicons:flag" class="size-4" /> End Game
+          <Icon name="heroicons:flag" /> End Game
         </button>
       </div>
 
@@ -210,12 +210,9 @@ async function finishGame() {
 
       <AppModal ref="highScoreModal" title="Confirm high score" @close="pendingHighScoreAction = null">
         <p>You entered <strong>{{ formatScore(turnPoints) }}</strong> points this roll. Did you actually score that many?</p>
-        <template #actions="{ close }">
-          <button class="btn btn-ghost gap-2" @click="close">
-            <Icon name="heroicons:x-mark" class="size-4" /> Cancel
-          </button>
+        <template #actions>
           <button class="btn btn-primary gap-2" @click="confirmHighScore">
-            <Icon name="heroicons:check" class="size-4" /> Yes, that's correct
+            <Icon name="heroicons:check" /> Yes, that's correct
           </button>
         </template>
       </AppModal>
@@ -225,12 +222,9 @@ async function finishGame() {
           Undo <strong>{{ lastTurnPlayerName }}</strong>'s Round {{ lastTurnBreakdown.round }} turn
           ({{ formatTurnResult(lastTurnBreakdown) }})?
         </p>
-        <template #actions="{ close }">
-          <button class="btn btn-ghost gap-2" @click="close">
-            <Icon name="heroicons:x-mark" class="size-4" /> Cancel
-          </button>
+        <template #actions>
           <button class="btn btn-primary gap-2" @click="confirmUndo">
-            <Icon name="heroicons:arrow-uturn-left" class="size-4" /> Yes, undo
+            <Icon name="heroicons:arrow-uturn-left" /> Yes, undo
           </button>
         </template>
       </AppModal>

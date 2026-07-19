@@ -1,6 +1,28 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+/*
+ * Styling conventions for this app. Keeping to them is what stops the same
+ * button appearing in two colors on two pages.
+ *
+ * - Colors come from DaisyUI semantic tokens only. No raw Tailwind palette
+ *   (bg-gray-800) and no hand-rolled radii or borders; DaisyUI owns those.
+ * - Button variant by meaning, not by looks:
+ *     primary  confirm / advance        neutral  secondary action
+ *     ghost    dismiss / cancel         error    destructive (delete)
+ *     warning  farkle (a game event, not a destructive action)
+ *     success  bank                     info     stash
+ * - Button size by context: modal actions default, page and card actions btn-sm.
+ * - Class order: btn btn-{variant} btn-{size} btn-{shape}.
+ * - Muted text: /60 for secondary, /30 for disabled or empty. Nothing in between.
+ * - Icon-only buttons need an aria-label.
+ * - Default icon size and shrink-0 come from nuxt.config; don't repeat them.
+ * - Reach for the shared shells before writing markup: AppCard, AppModal,
+ *   AppToast, PageHeader, EmptyState, RoundBreakdownPanel.
+ *
+ * No theme is pinned, so DaisyUI follows prefers-color-scheme — check both.
+ */
+
 h1 {
   @apply text-2xl font-bold;
 }

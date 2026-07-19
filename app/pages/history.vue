@@ -46,7 +46,7 @@ const displayedGames = computed(() =>
   <PageHeader title="Past Games">
     <template #actions>
       <label class="flex items-center gap-2 text-sm cursor-pointer">
-        <Icon name="heroicons:funnel" class="size-4" />
+        <Icon name="heroicons:funnel" />
         <span>Hide aborted</span>
         <input type="checkbox" v-model="hideAborted" class="toggle toggle-sm" />
       </label>
@@ -76,7 +76,7 @@ const displayedGames = computed(() =>
           :class="p.id === summary.game.winnerGamePlayerId && summary.winnerScore >= WIN_TARGET
             ? 'font-bold text-accent' : 'text-base-content/60'"
         >
-          <span class="grow">{{ p.playerName }}</span>
+          <span class="list-col-grow">{{ p.playerName }}</span>
           <span class="font-mono">{{ formatScore(p.totalScore) }}</span>
         </li>
       </ul>

@@ -27,7 +27,7 @@ async function removePlayer() {
   <PageHeader title="Players">
     <template #actions>
       <button class="btn btn-neutral btn-sm gap-2" @click="newPlayerModal?.open()">
-        <Icon name="heroicons:user-plus" class="size-4" /> New Player
+        <Icon name="heroicons:user-plus" /> New Player
       </button>
     </template>
   </PageHeader>
@@ -37,13 +37,13 @@ async function removePlayer() {
   <AppCard v-else>
     <ul class="list">
       <li v-for="p in players" :key="p.id" class="list-row items-center px-0 py-1">
-        <span class="grow">{{ p.name }}</span>
+        <span class="list-col-grow">{{ p.name }}</span>
         <button
           class="btn btn-ghost btn-sm btn-square text-error"
           :aria-label="`Remove ${p.name}`"
           @click="askRemove(p)"
         >
-          <Icon name="heroicons:x-mark" class="size-4" />
+          <Icon name="heroicons:x-mark" />
         </button>
       </li>
     </ul>
@@ -53,12 +53,9 @@ async function removePlayer() {
 
   <AppModal ref="confirmModal" title="Remove player?">
     <p>Remove <strong>{{ playerToDelete?.name }}</strong> from the player list?</p>
-    <template #actions="{ close }">
-      <button class="btn btn-ghost gap-2" @click="close">
-        <Icon name="heroicons:x-mark" class="size-4" /> Cancel
-      </button>
+    <template #actions>
       <button class="btn btn-error gap-2" @click="removePlayer">
-        <Icon name="heroicons:trash" class="size-4" /> Remove
+        <Icon name="heroicons:trash" /> Remove
       </button>
     </template>
   </AppModal>
