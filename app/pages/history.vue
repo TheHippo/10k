@@ -2,11 +2,15 @@
 import { computed } from 'vue'
 import { db } from '~/db'
 import { deriveGameState } from '~/game/engine'
+import { WIN_TARGET } from '~/constants/game'
 import type { Game, GamePlayerWithName, RoundBreakdown } from '~/interfaces'
 
 interface FinishedGameSummary {
   game: Game
+  /** Sorted by score, for the standings list. */
   players: GamePlayerWithName[]
+  /** Sorted by turn order, so breakdown columns read left-to-right as the turns were played. */
+  playersInTurnOrder: GamePlayerWithName[]
   rounds: RoundBreakdown[]
   winnerName: string
   winnerScore: number
@@ -30,6 +34,7 @@ const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
     return {
       game,
       players: playersSorted,
+      playersInTurnOrder: players,
       rounds,
       winnerName: winner?.playerName ?? 'Unknown',
       winnerScore: winner?.totalScore ?? 0,
@@ -39,7 +44,7 @@ const finishedGames = useLiveQuery<FinishedGameSummary[]>(async () => {
 
 const hideAborted = useLocalStorage('history:hideAborted', false)
 const displayedGames = computed(() =>
-  hideAborted.value ? finishedGames.value.filter(s => s.winnerScore >= 10000) : finishedGames.value
+  hideAborted.value ? finishedGames.value.filter(s => s.winnerScore >= WIN_TARGET) : finishedGames.value
 )
 </script>
 
@@ -59,7 +64,7 @@ const displayedGames = computed(() =>
         <span class="text-sm text-base-content/60 font-medium">
           {{ summary.game.startedAt.toLocaleDateString() }}
         </span>
-        <span v-if="summary.winnerScore >= 10000" class="badge badge-accent">
+        <span v-if="summary.winnerScore >= WIN_TARGET" class="badge badge-accent">
           🏆 {{ summary.winnerName }}
         </span>
         <span v-else class="badge badge-neutral">Aborted</span>
@@ -69,18 +74,18 @@ const displayedGames = computed(() =>
         <div
           v-for="p in summary.players" :key="p.id"
           class="flex justify-between text-sm"
-          :class="p.id === summary.game.winnerGamePlayerId && summary.winnerScore >= 10000
+          :class="p.id === summary.game.winnerGamePlayerId && summary.winnerScore >= WIN_TARGET
             ? 'font-bold text-accent' : 'text-base-content/80'"
         >
           <span>{{ p.playerName }}</span>
-          <span class="font-mono">{{ p.totalScore.toLocaleString() }}</span>
+          <span class="font-mono">{{ formatScore(p.totalScore) }}</span>
         </div>
       </div>
       <div class="collapse collapse-arrow bg-base-100 mt-2">
         <input type="checkbox" />
         <div class="collapse-title text-sm font-medium py-2 min-h-0">Round breakdown</div>
         <div class="collapse-content">
-          <RoundBreakdown :rounds="summary.rounds" :players="summary.players" />
+          <RoundBreakdown :rounds="summary.rounds" :players="summary.playersInTurnOrder" />
         </div>
       </div>
     </AppCard>

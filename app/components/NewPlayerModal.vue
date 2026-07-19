@@ -32,7 +32,7 @@ defineExpose({ open })
         v-model="newPlayerName"
         type="text"
         placeholder="Player name"
-        class="input input-bordered w-full"
+        class="input w-full"
         @keyup.enter="createPlayer"
       />
       <div class="modal-action">

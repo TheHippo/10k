@@ -164,7 +164,7 @@ async function endGame() {
                   {{ gp.consecutiveFarkles }} farkle{{ gp.consecutiveFarkles > 1 ? 's' : '' }}
                 </span>
               </td>
-              <td class="text-right font-mono font-bold">{{ gp.totalScore }}</td>
+              <td class="text-right font-mono font-bold">{{ formatScore(gp.totalScore) }}</td>
               <td>
                 <span v-if="gp.id === activeGame.currentGamePlayerId" class="badge badge-primary">
                   current
@@ -197,7 +197,7 @@ async function endGame() {
             min="0"
             step="50"
             placeholder="Points scored this roll"
-            class="input input-bordered join-item grow"
+            class="input join-item grow"
           />
           <button
             type="button"
@@ -266,7 +266,7 @@ async function endGame() {
             <h3 class="font-bold text-lg mb-4">Undo last turn</h3>
             <p v-if="lastTurnBreakdown">
               Undo <strong>{{ lastTurnPlayerName }}</strong>'s Round {{ lastTurnBreakdown.round }} turn
-              (<template v-if="lastTurnBreakdown.farkled">Farkle<template v-if="lastTurnBreakdown.penalty !== 0"> · {{ lastTurnBreakdown.penalty }} pts</template></template><template v-else>+{{ lastTurnBreakdown.pointsBanked }} pts</template>)?
+              ({{ formatTurnResult(lastTurnBreakdown) }})?
             </p>
             <div class="modal-action">
               <button class="btn btn-ghost gap-2" @click="undoDialogRef?.close()">

@@ -8,8 +8,12 @@ useHead({
     { rel: 'icon', href: '/icons/source.svg', type: 'image/svg+xml' },
     { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon-180x180.png' },
   ],
+  // DaisyUI follows prefers-color-scheme, so the browser chrome has to as well —
+  // a single dark theme-color framed a light page in dark chrome.
+  // Values are DaisyUI 5's default base-100 for each scheme.
   meta: [
-    { name: 'theme-color', content: '#1d232a' },
+    { name: 'theme-color', media: '(prefers-color-scheme: light)', content: '#ffffff' },
+    { name: 'theme-color', media: '(prefers-color-scheme: dark)', content: '#1d232a' },
   ],
 })
 

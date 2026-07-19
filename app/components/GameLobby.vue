@@ -2,14 +2,15 @@
 import { ref } from 'vue'
 import { db } from '~/db'
 import type { GamePlayer, Game } from '~/db'
+import { MIN_PLAYERS, MAX_PLAYERS } from '~/constants/game'
 
 const allPlayers = useLiveQuery(() => db.players.orderBy('name').filter(p => !p.deleted).toArray(), [])
-const selectedPlayerIds = ref<(number | null)[]>([null, null])
+const selectedPlayerIds = ref<(number | null)[]>(Array(MIN_PLAYERS).fill(null))
 
 const newPlayerModal = ref<{ open: () => void } | null>(null)
 
 function addPlayer() {
-  if (selectedPlayerIds.value.length < 6) selectedPlayerIds.value.push(null)
+  if (selectedPlayerIds.value.length < MAX_PLAYERS) selectedPlayerIds.value.push(null)
 }
 
 function removePlayer(i: number) {
@@ -18,7 +19,7 @@ function removePlayer(i: number) {
 
 async function startGame() {
   const ids = selectedPlayerIds.value.filter((id): id is number => id !== null)
-  if (ids.length < 2) return
+  if (ids.length < MIN_PLAYERS) return
 
   await db.transaction('rw', db.games, db.gamePlayers, async () => {
     const gameId = await db.games.add({
@@ -40,7 +41,7 @@ async function startGame() {
     await db.games.update(gameId, { currentGamePlayerId: firstId })
   })
 
-  selectedPlayerIds.value = [null, null]
+  selectedPlayerIds.value = Array(MIN_PLAYERS).fill(null)
 }
 
 function onPlayerCreated(id: number) {
@@ -56,7 +57,7 @@ function onPlayerCreated(id: number) {
   <AppCard>
     <div class="space-y-2">
       <div v-for="(id, i) in selectedPlayerIds" :key="i" class="flex gap-2">
-        <select v-model="selectedPlayerIds[i]" class="select select-bordered flex-1">
+        <select v-model="selectedPlayerIds[i]" class="select flex-1">
           <option :value="null" disabled>Select player…</option>
           <option v-for="p in allPlayers" :key="p.id" :value="p.id"
                   :disabled="selectedPlayerIds.some((sid, j) => sid === p.id && j !== i)">
@@ -66,7 +67,7 @@ function onPlayerCreated(id: number) {
         <button
           class="btn btn-ghost btn-square"
           :aria-label="`Remove player slot ${i + 1}`"
-          :disabled="selectedPlayerIds.length <= 2"
+          :disabled="selectedPlayerIds.length <= MIN_PLAYERS"
           @click="removePlayer(i)"
         ><Icon name="heroicons:x-mark" class="size-4" /></button>
       </div>
@@ -76,7 +77,7 @@ function onPlayerCreated(id: number) {
       <div class="flex gap-2 w-full sm:w-auto">
         <button
           class="btn btn-neutral btn-sm gap-2 flex-1 sm:flex-none"
-          :disabled="selectedPlayerIds.length >= 6"
+          :disabled="selectedPlayerIds.length >= MAX_PLAYERS"
           @click="addPlayer"
         ><Icon name="heroicons:user-plus" class="size-4" /> Add Player</button>
         <button class="btn btn-neutral btn-sm gap-2 flex-1 sm:flex-none" @click="newPlayerModal?.open()">
