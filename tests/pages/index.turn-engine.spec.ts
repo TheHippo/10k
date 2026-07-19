@@ -349,6 +349,56 @@ describe('pages/index.vue turn engine', () => {
     })
   })
 
+  describe('stash loss on farkle', () => {
+    it('a farkle discards the stash as well as the roll (Rules.md)', async () => {
+      const { game, gamePlayers, wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+      await wrapper.get('input[type="number"]').setValue(400)
+      await clickButton(wrapper, 'Stash')
+      expect(wrapper.text()).toContain('Stashed: 400 pts')
+
+      await clickButton(wrapper, 'Farkle')
+
+      await waitFor(async () => {
+        const turns = await db.turns.where('gameId').equals(game.id).toArray()
+        expect(turns[0]).toMatchObject({ pointsBanked: 0, farkled: true })
+
+        const alice = await db.gamePlayers.get(gamePlayers[0]!.id)
+        expect(alice?.totalScore).toBe(0)
+      })
+
+      // The stash notice is gone, so the points cannot be banked on a later turn.
+      expect(wrapper.text()).not.toContain('Stashed:')
+    })
+
+    it('warns that a sub-minimum roll would also cost the stash', async () => {
+      const { wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+      await wrapper.get('input[type="number"]').setValue(400)
+      await clickButton(wrapper, 'Stash')
+      await wrapper.get('input[type="number"]').setValue(100)
+
+      expect(wrapper.text()).toContain('loses your 400 stashed points too')
+    })
+
+    it('banking commits the stash together with the qualifying roll', async () => {
+      const { game, gamePlayers, wrapper } = await mountActiveGame(['Alice', 'Bob'])
+
+      await wrapper.get('input[type="number"]').setValue(400)
+      await clickButton(wrapper, 'Stash')
+      await wrapper.get('input[type="number"]').setValue(350)
+      await clickButton(wrapper, 'Bank')
+
+      await waitFor(async () => {
+        const alice = await db.gamePlayers.get(gamePlayers[0]!.id)
+        expect(alice?.totalScore).toBe(750)
+        const turns = await db.turns.where('gameId').equals(game.id).toArray()
+        expect(turns[0]).toMatchObject({ pointsBanked: 750 })
+      })
+      expect(wrapper.text()).not.toContain('Stashed:')
+    })
+  })
+
   describe('undo', () => {
     it('disables Undo when there are no turns yet', async () => {
       const { wrapper } = await mountActiveGame(['Alice', 'Bob'])

@@ -69,15 +69,24 @@ export async function seedTurns(gameId: number, gamePlayers: GamePlayer[], seeds
   }
 }
 
+/**
+ * Finishes a game. Pass `scores` to set totals directly (fast, but the game has no turn
+ * log), or `options.turns` to play them out through the engine when the test needs the
+ * round breakdown to render.
+ */
 export async function seedFinishedGame(
   playerNames: string[],
   scores: number[],
-  options: { startedAt?: Date, finishedAt?: Date } = {},
+  options: { startedAt?: Date, finishedAt?: Date, turns?: TurnSeed[] } = {},
 ) {
   const seed = await seedActiveGame(
     playerNames,
-    scores.map(totalScore => ({ totalScore })),
+    options.turns ? [] : scores.map(totalScore => ({ totalScore })),
   )
+
+  if (options.turns) {
+    await seedTurns(seed.game.id, seed.gamePlayers, options.turns)
+  }
 
   // Finish through the real engine so the winner rule is never duplicated here — a
   // regression in endGame must be able to fail these tests.
