@@ -5,27 +5,15 @@ function reload() {
   pwa?.updateServiceWorker(true)
 }
 
-function checkForUpdate() {
-  if (document.visibilityState === 'visible') {
-    pwa?.getSWRegistration()?.update()
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('visibilitychange', checkForUpdate)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('visibilitychange', checkForUpdate)
-})
+// Returning to the tab is the moment a user is most likely to accept an update.
+useVisibilityChange(() => pwa?.getSWRegistration()?.update())
 </script>
 
 <template>
-  <div v-if="pwa?.needRefresh" class="toast toast-bottom toast-center z-30">
-    <div class="alert alert-info">
-      <Icon name="heroicons:arrow-path" class="size-4" />
-      <span>A new version is available.</span>
-      <button class="btn btn-sm btn-primary" @click="reload">Reload</button>
-    </div>
-  </div>
+  <AppToast v-if="pwa?.needRefresh" icon="heroicons:arrow-path">
+    A new version is available.
+    <template #actions>
+      <button class="btn btn-primary btn-sm" @click="reload">Reload</button>
+    </template>
+  </AppToast>
 </template>

@@ -1,24 +1,11 @@
 import { db } from '~/db'
-import type { Turn } from '~/interfaces'
-import { deriveGameState } from './deriveGameState'
+import type { Game, GamePlayer, Turn } from '~/interfaces'
+import { writeProjection } from './projection'
 
 export { deriveGameState } from './deriveGameState'
 
-export async function rebuildProjection(gameId: number) {
-  const gamePlayers = await db.gamePlayers.where('gameId').equals(gameId).sortBy('turnOrder')
-  const turns = await db.turns.where('gameId').equals(gameId).sortBy('turnNumber')
-  const { standings, currentGamePlayerId } = deriveGameState(gamePlayers, turns)
-
-  await Promise.all(standings.map(s =>
-    db.gamePlayers.update(s.gamePlayerId, {
-      totalScore: s.totalScore,
-      consecutiveFarkles: s.consecutiveFarkles,
-    }),
-  ))
-
-  if (gamePlayers.length > 0) {
-    await db.games.update(gameId, { currentGamePlayerId })
-  }
+export function rebuildProjection(gameId: number) {
+  return writeProjection(db, gameId)
 }
 
 async function appendTurn(gameId: number, gamePlayerId: number, pointsBanked: number, farkled: boolean) {
@@ -51,5 +38,39 @@ export async function undoLastTurn(gameId: number) {
     if (!last) return
     await db.turns.delete(last.id)
     await rebuildProjection(gameId)
+  })
+}
+
+/** Creates a game with the given players in the given turn order. */
+export async function startGame(playerIds: number[]): Promise<number> {
+  return db.transaction('rw', db.games, db.gamePlayers, async () => {
+    const gameId = await db.games.add({
+      status: 'active',
+      startedAt: new Date(),
+      currentGamePlayerId: 0,
+    } as Game)
+
+    let firstGamePlayerId = 0
+    for (const [turnOrder, playerId] of playerIds.entries()) {
+      const id = await db.gamePlayers.add({
+        gameId, playerId, turnOrder, totalScore: 0, consecutiveFarkles: 0,
+      } as GamePlayer)
+      if (turnOrder === 0) firstGamePlayerId = id
+    }
+
+    await db.games.update(gameId, { currentGamePlayerId: firstGamePlayerId })
+    return gameId
+  })
+}
+
+/** Finishes a game, awarding it to the highest scorer. Ties go to the earliest turn order. */
+export async function endGame(gameId: number) {
+  const gamePlayers = await db.gamePlayers.where('gameId').equals(gameId).sortBy('turnOrder')
+  const winner = [...gamePlayers].sort((a, b) => b.totalScore - a.totalScore)[0]
+
+  await db.games.update(gameId, {
+    status: 'finished',
+    finishedAt: new Date(),
+    winnerGamePlayerId: winner?.id,
   })
 }

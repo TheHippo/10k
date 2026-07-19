@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { Game, Player, GamePlayer, Turn } from '~/interfaces'
-import { deriveGameState } from '~/game/deriveGameState'
+import { writeProjection, type ProjectionTables } from '~/game/projection'
 export type { Game, Player, GamePlayer, Turn } from '~/interfaces'
 
 class AppDatabase extends Dexie {
@@ -20,22 +20,17 @@ class AppDatabase extends Dexie {
     this.version(3).stores({
       turns: '++id, gameId, gamePlayerId, [gameId+turnNumber]',
     }).upgrade(async (tx) => {
+      // Backfill projections that predate the turn log being the source of truth.
+      // Shares writeProjection with the engine so the two cannot drift apart.
+      const tables = {
+        games: tx.table('games'),
+        gamePlayers: tx.table('gamePlayers'),
+        turns: tx.table('turns'),
+      } as unknown as ProjectionTables
+
       const games = await tx.table<Game, number>('games').toArray()
       for (const game of games) {
-        const gamePlayers = await tx.table<GamePlayer, number>('gamePlayers').where('gameId').equals(game.id).sortBy('turnOrder')
-        const turns = await tx.table<Turn, number>('turns').where('gameId').equals(game.id).sortBy('turnNumber')
-        const { standings, currentGamePlayerId } = deriveGameState(gamePlayers, turns)
-
-        for (const standing of standings) {
-          await tx.table<GamePlayer, number>('gamePlayers').update(standing.gamePlayerId, {
-            totalScore: standing.totalScore,
-            consecutiveFarkles: standing.consecutiveFarkles,
-          })
-        }
-
-        if (gamePlayers.length > 0) {
-          await tx.table<Game, number>('games').update(game.id, { currentGamePlayerId })
-        }
+        await writeProjection(tables, game.id)
       }
     })
   }

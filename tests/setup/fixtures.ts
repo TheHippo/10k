@@ -1,6 +1,6 @@
 import { db } from '~/db'
 import type { Player, Game, GamePlayer } from '~/db'
-import { recordBank, recordFarkle } from '~/game/engine'
+import { endGame, recordBank, recordFarkle } from '~/game/engine'
 
 export async function seedPlayers(names: string[]): Promise<Player[]> {
   const players: Player[] = []
@@ -78,13 +78,13 @@ export async function seedFinishedGame(
     playerNames,
     scores.map(totalScore => ({ totalScore })),
   )
-  const winner = [...seed.gamePlayers].sort((a, b) => b.totalScore - a.totalScore)[0]!
 
+  // Finish through the real engine so the winner rule is never duplicated here — a
+  // regression in endGame must be able to fail these tests.
+  await endGame(seed.game.id)
   await db.games.update(seed.game.id, {
-    status: 'finished',
     startedAt: options.startedAt ?? seed.game.startedAt,
     finishedAt: options.finishedAt ?? new Date(),
-    winnerGamePlayerId: winner.id,
   })
 
   const game = (await db.games.get(seed.game.id)) as Game

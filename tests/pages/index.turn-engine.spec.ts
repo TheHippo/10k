@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import IndexPage from '~/pages/index.vue'
 import { db } from '~/db'
 import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS, HIGH_SCORE_CONFIRM_THRESHOLD } from '~/constants/game'
+import { formatScore } from '~/utils/format'
 import { mountWithStubs } from '../setup/mount'
 import { seedActiveGame, seedTurns } from '../setup/fixtures'
 import { clickButton, dialogTitled, getButton, waitFor } from '../setup/dom'
@@ -123,7 +124,7 @@ describe('pages/index.vue turn engine', () => {
     await wrapper.get('input[type="number"]').setValue(MIN_STASH_POINTS)
     await clickButton(wrapper, 'Stash')
 
-    expect(wrapper.text()).toContain(`Stashed: ${MIN_STASH_POINTS} pts`)
+    expect(wrapper.text()).toContain(`Stashed: ${formatScore(MIN_STASH_POINTS)} pts`)
     expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('0')
   })
 
@@ -144,7 +145,7 @@ describe('pages/index.vue turn engine', () => {
     await wrapper.get('input[type="number"]').setValue(999)
     await clickButton(wrapper, 'Three Pairs')
 
-    expect(wrapper.text()).toContain(`Stashed: ${THREE_PAIRS_POINTS} pts`)
+    expect(wrapper.text()).toContain(`Stashed: ${formatScore(THREE_PAIRS_POINTS)} pts`)
     expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('0')
   })
 
@@ -154,7 +155,7 @@ describe('pages/index.vue turn engine', () => {
     await wrapper.get('input[type="number"]').setValue(999)
     await clickButton(wrapper, 'Straight 1')
 
-    expect(wrapper.text()).toContain(`Stashed: ${STRAIGHT_POINTS} pts`)
+    expect(wrapper.text()).toContain(`Stashed: ${formatScore(STRAIGHT_POINTS)} pts`)
     expect((wrapper.get('input[type="number"]').element as HTMLInputElement).value).toBe('0')
   })
 

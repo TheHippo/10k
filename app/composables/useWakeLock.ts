@@ -23,23 +23,17 @@ export function useWakeLock(active: Ref<boolean>) {
     await current?.release()
   }
 
-  async function handleVisibilityChange() {
-    if (active.value && document.visibilityState === 'visible' && !sentinel) {
-      await acquire()
-    }
-  }
-
   watch(active, (value) => {
     if (value) acquire()
     else release()
   }, { immediate: true })
 
-  document.addEventListener('visibilitychange', handleVisibilityChange)
-
-  onUnmounted(() => {
-    document.removeEventListener('visibilitychange', handleVisibilityChange)
-    release()
+  // The browser drops the lock when the tab is hidden, so re-acquire on return.
+  useVisibilityChange(() => {
+    if (active.value && !sentinel) acquire()
   })
+
+  onUnmounted(release)
 
   return { isActive }
 }

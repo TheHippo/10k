@@ -4,44 +4,45 @@ import { db } from '~/db'
 
 useHead({ title: 'Players' })
 
-const players = useLiveQuery(
-  () => db.players.orderBy('name').filter(p => !p.deleted).toArray(),
-  []
-)
+const players = usePlayers()
 
 const newPlayerModal = ref<{ open: () => void } | null>(null)
-const confirmDialogRef = ref<HTMLDialogElement | null>(null)
-const playerToDelete = ref<{ id: number; name: string } | null>(null)
+const confirmModal = ref<{ open: () => void, close: () => void } | null>(null)
+const playerToDelete = ref<{ id: number, name: string } | null>(null)
 
-function askRemove(player: { id: number; name: string }) {
+function askRemove(player: { id: number, name: string }) {
   playerToDelete.value = player
-  confirmDialogRef.value?.showModal()
+  confirmModal.value?.open()
 }
 
 async function removePlayer() {
   if (!playerToDelete.value) return
   await db.players.update(playerToDelete.value.id, { deleted: true })
-  confirmDialogRef.value?.close()
+  confirmModal.value?.close()
   playerToDelete.value = null
 }
 </script>
 
 <template>
-  <div class="flex justify-between items-center mb-4">
-    <h1 class="mb-0">Players</h1>
-    <button class="btn btn-primary btn-sm gap-2" @click="newPlayerModal?.open()">
-      <Icon name="heroicons:user-plus" class="size-4" /> New Player
-    </button>
-  </div>
+  <PageHeader title="Players">
+    <template #actions>
+      <button class="btn btn-neutral btn-sm gap-2" @click="newPlayerModal?.open()">
+        <Icon name="heroicons:user-plus" class="size-4" /> New Player
+      </button>
+    </template>
+  </PageHeader>
 
-  <p v-if="players.length === 0" class="text-base-content/60 text-center mt-8">
-    No players yet.
-  </p>
+  <EmptyState v-if="players.length === 0">No players yet.</EmptyState>
+
   <AppCard v-else>
-    <ul class="space-y-2">
-      <li v-for="p in players" :key="p.id" class="flex justify-between items-center">
-        <span>{{ p.name }}</span>
-        <button class="btn btn-ghost btn-sm btn-square text-error" :aria-label="`Remove ${p.name}`" @click="askRemove(p)">
+    <ul class="list">
+      <li v-for="p in players" :key="p.id" class="list-row items-center px-0 py-1">
+        <span class="grow">{{ p.name }}</span>
+        <button
+          class="btn btn-ghost btn-sm btn-square text-error"
+          :aria-label="`Remove ${p.name}`"
+          @click="askRemove(p)"
+        >
           <Icon name="heroicons:x-mark" class="size-4" />
         </button>
       </li>
@@ -50,19 +51,15 @@ async function removePlayer() {
 
   <NewPlayerModal ref="newPlayerModal" />
 
-  <dialog ref="confirmDialogRef" class="modal">
-    <div class="modal-box">
-      <h3 class="font-bold text-lg">Remove player?</h3>
-      <p class="py-4">Remove <strong>{{ playerToDelete?.name }}</strong> from the player list?</p>
-      <div class="modal-action">
-        <form method="dialog">
-          <button class="btn gap-2"><Icon name="heroicons:x-mark" class="size-4" /> Cancel</button>
-        </form>
-        <button class="btn btn-error gap-2" @click="removePlayer">
-          <Icon name="heroicons:trash" class="size-4" /> Remove
-        </button>
-      </div>
-    </div>
-    <form method="dialog" class="modal-backdrop"><button>close</button></form>
-  </dialog>
+  <AppModal ref="confirmModal" title="Remove player?">
+    <p>Remove <strong>{{ playerToDelete?.name }}</strong> from the player list?</p>
+    <template #actions="{ close }">
+      <button class="btn btn-ghost gap-2" @click="close">
+        <Icon name="heroicons:x-mark" class="size-4" /> Cancel
+      </button>
+      <button class="btn btn-error gap-2" @click="removePlayer">
+        <Icon name="heroicons:trash" class="size-4" /> Remove
+      </button>
+    </template>
+  </AppModal>
 </template>
