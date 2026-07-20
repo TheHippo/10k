@@ -159,11 +159,13 @@ async function confirmEndGame() {
       </div>
 
       <div class="flex gap-2">
-        <button class="btn btn-outline btn-sm flex-1 gap-2" @click="stash(THREE_PAIRS_POINTS)">
-          <Icon name="heroicons:squares-2x2" /> Three Pairs ({{ formatDelta(THREE_PAIRS_POINTS) }})
+        <button class="btn btn-outline btn-sm flex-1 gap-2 whitespace-nowrap" @click="stash(THREE_PAIRS_POINTS)">
+          <Icon name="heroicons:squares-2x2" /> Three Pairs
+          <span class="hidden sm:inline">({{ formatDelta(THREE_PAIRS_POINTS) }})</span>
         </button>
-        <button class="btn btn-outline btn-sm flex-1 gap-2" @click="stash(STRAIGHT_POINTS)">
-          <Icon name="heroicons:bars-4" /> Straight 1–6 ({{ formatDelta(STRAIGHT_POINTS) }})
+        <button class="btn btn-outline btn-sm flex-1 gap-2 whitespace-nowrap" @click="stash(STRAIGHT_POINTS)">
+          <Icon name="heroicons:bars-4" /> Straight 1–6
+          <span class="hidden sm:inline">({{ formatDelta(STRAIGHT_POINTS) }})</span>
         </button>
       </div>
 
