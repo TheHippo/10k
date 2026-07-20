@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS, HIGH_SCORE_CONFIRM_THRESHOLD } from '~/constants/game'
+import { MIN_STASH_POINTS, THREE_PAIRS_POINTS, STRAIGHT_POINTS, HIGH_SCORE_CONFIRM_THRESHOLD, WIN_TARGET } from '~/constants/game'
 import { deriveGameState, endGame, recordBank, recordFarkle, undoLastTurn } from '~/game/engine'
 
 const active = useActiveGame()
@@ -35,6 +35,7 @@ const canScore = computed(() => turnPoints.value >= MIN_STASH_POINTS && !isNotDi
 
 const highScoreModal = ref<{ open: () => void, close: () => void } | null>(null)
 const undoModal = ref<{ open: () => void, close: () => void } | null>(null)
+const endGameModal = ref<{ open: () => void, close: () => void } | null>(null)
 let pendingHighScoreAction: (() => void) | null = null
 
 function withHighScoreConfirm(action: () => void) {
@@ -103,9 +104,20 @@ async function farkle() {
   refocusPointsInput()
 }
 
-async function finishGame() {
-  if (!activeGame.value) return
-  await endGame(activeGame.value.id)
+/**
+ * Who ending the game right now would award it to. Shown in the confirmation so the
+ * consequence is visible, but the app deliberately does not judge whether the target
+ * has been reached or the final round has been played — that stays with the players.
+ */
+const prospectiveWinner = computed(() =>
+  [...activeGamePlayers.value].sort((a, b) => b.totalScore - a.totalScore)[0] ?? null,
+)
+
+async function confirmEndGame() {
+  const game = activeGame.value
+  if (!game) return
+  endGameModal.value?.close()
+  await endGame(game.id)
 }
 </script>
 
@@ -201,7 +213,7 @@ async function finishGame() {
         <button class="btn btn-outline btn-sm gap-2" :disabled="activeTurns.length === 0" @click="undoModal?.open()">
           <Icon name="heroicons:arrow-uturn-left" /> Undo
         </button>
-        <button class="btn btn-neutral btn-sm gap-2" @click="finishGame">
+        <button class="btn btn-neutral btn-sm gap-2" @click="endGameModal?.open()">
           <Icon name="heroicons:flag" /> End Game
         </button>
       </div>
@@ -225,6 +237,23 @@ async function finishGame() {
         <template #actions>
           <button class="btn btn-primary gap-2" @click="confirmUndo">
             <Icon name="heroicons:arrow-uturn-left" /> Yes, undo
+          </button>
+        </template>
+      </AppModal>
+
+      <AppModal ref="endGameModal" title="End this game?">
+        <p v-if="prospectiveWinner">
+          This finishes the game and awards it to
+          <strong>{{ prospectiveWinner.playerName }}</strong>
+          with {{ formatScore(prospectiveWinner.totalScore) }} points.
+        </p>
+        <p class="text-sm text-base-content/60 mt-2">
+          Check that someone has passed {{ formatScore(WIN_TARGET) }} and that everyone
+          else has had their final turn.
+        </p>
+        <template #actions>
+          <button class="btn btn-primary gap-2" @click="confirmEndGame">
+            <Icon name="heroicons:flag" /> Yes, end game
           </button>
         </template>
       </AppModal>

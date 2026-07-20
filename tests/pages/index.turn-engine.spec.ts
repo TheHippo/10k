@@ -326,6 +326,7 @@ describe('pages/index.vue turn engine', () => {
     )
 
     await clickButton(wrapper, 'End Game')
+    await clickButton(wrapper, 'Yes, end game')
 
     await waitFor(async () => {
       const updated = await db.games.get(game.id)
@@ -342,10 +343,69 @@ describe('pages/index.vue turn engine', () => {
     )
 
     await clickButton(wrapper, 'End Game')
+    await clickButton(wrapper, 'Yes, end game')
 
     await waitFor(async () => {
       const updated = await db.games.get(game.id)
       expect(updated?.winnerGamePlayerId).toBe(gamePlayers[0].id)
+    })
+  })
+
+  describe('end game confirmation', () => {
+    it('asks before finishing rather than ending on the first click', async () => {
+      const { game, wrapper } = await mountActiveGame(
+        ['Alice', 'Bob'],
+        [{ totalScore: 12000 }, { totalScore: 4000 }],
+      )
+
+      await clickButton(wrapper, 'End Game')
+
+      expect(wrapper.text()).toContain('End this game?')
+      expect((await db.games.get(game.id))?.status).toBe('active')
+    })
+
+    it('names the player the game would be awarded to', async () => {
+      const { wrapper } = await mountActiveGame(
+        ['Alice', 'Bob'],
+        [{ totalScore: 4000 }, { totalScore: 12000 }],
+      )
+
+      await clickButton(wrapper, 'End Game')
+
+      expect(wrapper.text()).toContain('Bob')
+      expect(wrapper.text()).toContain('12,000')
+    })
+
+    it('leaves the game running when the confirmation is dismissed', async () => {
+      const { game, wrapper } = await mountActiveGame(
+        ['Alice', 'Bob'],
+        [{ totalScore: 12000 }, { totalScore: 4000 }],
+      )
+
+      await clickButton(wrapper, 'End Game')
+      await clickButton(dialogTitled(wrapper, 'End this game?'), 'Cancel')
+
+      const updated = await db.games.get(game.id)
+      expect(updated?.status).toBe('active')
+      expect(updated?.finishedAt).toBeUndefined()
+    })
+
+    it('reminds the player to check the target and the final turn, without enforcing either', async () => {
+      // The app deliberately does not block ending a game below the target.
+      const { game, wrapper } = await mountActiveGame(
+        ['Alice', 'Bob'],
+        [{ totalScore: 500 }, { totalScore: 300 }],
+      )
+
+      await clickButton(wrapper, 'End Game')
+      expect(wrapper.text()).toContain('10,000')
+      expect(wrapper.text()).toContain('final turn')
+
+      await clickButton(wrapper, 'Yes, end game')
+
+      await waitFor(async () => {
+        expect((await db.games.get(game.id))?.status).toBe('finished')
+      })
     })
   })
 
