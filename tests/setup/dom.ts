@@ -1,19 +1,49 @@
 import { flushPromises, type VueWrapper } from '@vue/test-utils'
 import { vi } from 'vitest'
 
-export async function click(wrapper: VueWrapper<any>, selector: string) {
-  await wrapper.get(selector).trigger('click')
+/** Anything we can search within: the page wrapper, or a scoped element like a <dialog>. */
+type Searchable = Pick<VueWrapper<any>, 'findAll'>
+
+function normalize(text: string) {
+  return text.replace(/\s+/g, ' ').trim()
+}
+
+/**
+ * Finds a button by its accessible name — visible text, or aria-label for icon-only
+ * buttons. Prefers an exact match and throws when a name is ambiguous, so a test can
+ * never silently act on the wrong button.
+ */
+export function getButton(root: Searchable, name: string) {
+  const buttons = root.findAll('button')
+  const nameOf = (b: (typeof buttons)[number]) =>
+    normalize(b.text()) || normalize(b.attributes('aria-label') ?? '')
+
+  const exact = buttons.filter(b => nameOf(b) === name)
+  if (exact.length === 1) return exact[0]!
+  if (exact.length > 1) throw new Error(`${exact.length} buttons named "${name}"; scope the query`)
+
+  const partial = buttons.filter(b => nameOf(b).includes(name))
+  if (partial.length === 1) return partial[0]!
+  if (partial.length > 1) throw new Error(`${partial.length} buttons matching "${name}"; scope the query`)
+
+  const available = buttons.map(b => `"${nameOf(b)}"`).join(', ')
+  throw new Error(`no button named "${name}". Available: ${available || '(none)'}`)
+}
+
+export async function clickButton(root: Searchable, name: string) {
+  await getButton(root, name).trigger('click')
   await flushPromises()
 }
 
-export function findButtonByText(wrapper: VueWrapper<any>, text: string) {
-  const btn = wrapper.findAll('button').find(b => b.text().includes(text))
-  if (!btn) throw new Error(`button with text "${text}" not found`)
-  return btn
+/** Scopes a query to one dialog, identified by text in its heading. */
+export function dialogTitled(wrapper: VueWrapper<any>, title: string) {
+  const dialog = wrapper.findAll('dialog').find(d => normalize(d.text()).includes(title))
+  if (!dialog) throw new Error(`no dialog containing "${title}"`)
+  return dialog
 }
 
-export async function clickButtonWithText(wrapper: VueWrapper<any>, text: string) {
-  await findButtonByText(wrapper, text).trigger('click')
+export async function click(wrapper: VueWrapper<any>, selector: string) {
+  await wrapper.get(selector).trigger('click')
   await flushPromises()
 }
 

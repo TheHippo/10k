@@ -1,6 +1,6 @@
 import { db } from '~/db'
 import type { Player, Game, GamePlayer } from '~/db'
-import { recordBank, recordFarkle } from '~/game/engine'
+import { endGame, recordBank, recordFarkle } from '~/game/engine'
 
 export async function seedPlayers(names: string[]): Promise<Player[]> {
   const players: Player[] = []
@@ -69,22 +69,31 @@ export async function seedTurns(gameId: number, gamePlayers: GamePlayer[], seeds
   }
 }
 
+/**
+ * Finishes a game. Pass `scores` to set totals directly (fast, but the game has no turn
+ * log), or `options.turns` to play them out through the engine when the test needs the
+ * round breakdown to render.
+ */
 export async function seedFinishedGame(
   playerNames: string[],
   scores: number[],
-  options: { startedAt?: Date, finishedAt?: Date } = {},
+  options: { startedAt?: Date, finishedAt?: Date, turns?: TurnSeed[] } = {},
 ) {
   const seed = await seedActiveGame(
     playerNames,
-    scores.map(totalScore => ({ totalScore })),
+    options.turns ? [] : scores.map(totalScore => ({ totalScore })),
   )
-  const winner = [...seed.gamePlayers].sort((a, b) => b.totalScore - a.totalScore)[0]!
 
+  if (options.turns) {
+    await seedTurns(seed.game.id, seed.gamePlayers, options.turns)
+  }
+
+  // Finish through the real engine so the winner rule is never duplicated here — a
+  // regression in endGame must be able to fail these tests.
+  await endGame(seed.game.id)
   await db.games.update(seed.game.id, {
-    status: 'finished',
     startedAt: options.startedAt ?? seed.game.startedAt,
     finishedAt: options.finishedAt ?? new Date(),
-    winnerGamePlayerId: winner.id,
   })
 
   const game = (await db.games.get(seed.game.id)) as Game

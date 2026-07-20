@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import NewPlayerModal from '~/components/NewPlayerModal.vue'
 import { db } from '~/db'
 import { mountWithStubs } from '../setup/mount'
-import { waitFor } from '../setup/dom'
+import { clickButton, getButton, waitFor } from '../setup/dom'
 
 describe('NewPlayerModal', () => {
   it('does not create a player for a whitespace-only name', async () => {
     const wrapper = await mountWithStubs(NewPlayerModal)
 
     await wrapper.get('input[type="text"]').setValue('   ')
-    expect(wrapper.get('button.btn-primary').attributes('disabled')).toBeDefined()
+    expect(getButton(wrapper, 'Create').attributes('disabled')).toBeDefined()
 
     expect(await db.players.count()).toBe(0)
   })
@@ -18,7 +18,7 @@ describe('NewPlayerModal', () => {
     const wrapper = await mountWithStubs(NewPlayerModal)
 
     await wrapper.get('input[type="text"]').setValue('  Zoe  ')
-    await wrapper.get('button.btn-primary').trigger('click')
+    await clickButton(wrapper, 'Create')
 
     await waitFor(async () => {
       const zoe = await db.players.where('name').equals('Zoe').first()

@@ -33,12 +33,9 @@ const rows = computed(() => props.rounds.map(round => ({
           <td v-for="cell in row.cells" :key="cell.player.id" class="text-right font-mono">
             <template v-if="cell.turn">
               <span :class="cell.turn.farkled ? 'text-error' : ''">
-                <template v-if="cell.turn.farkled">
-                  FARKLE<template v-if="cell.turn.penalty !== 0"> ({{ cell.turn.penalty }})</template>
-                </template>
-                <template v-else>+{{ cell.turn.pointsBanked }}</template>
+                {{ formatTurnResult(cell.turn) }}
               </span>
-              <span class="block text-xs text-base-content/50">{{ cell.turn.runningTotal }}</span>
+              <span class="block text-xs text-base-content/60">{{ formatScore(cell.turn.runningTotal) }}</span>
             </template>
             <span v-else class="text-base-content/30">—</span>
           </td>
